@@ -8,10 +8,13 @@ from typing import List, Optional
 from .environment import capture_environment
 from .experiment001 import run_experiment
 from .experiment002 import run_backend_matrix
+from .experiment_config import expand_axes, load_matrix
+from .matrix_runner import run_endpoint_matrix
 from .metrics import summarize
 from .mock_server import MockServerConfig, serve_forever
 from .models import BenchmarkMetadata, BenchmarkResult, RequestTrace
 from .online import run_online_benchmark
+from .quality import load_jsonl, score_predictions
 from .reporting import load_json, write_json, write_markdown
 from .synthetic import generate_traces
 
@@ -83,6 +86,30 @@ def _parser() -> argparse.ArgumentParser:
     experiment002.add_argument("--config", type=Path, required=True)
     experiment002.add_argument("--output-dir", type=Path, required=True)
     experiment002.add_argument("--backend-version", default="unknown")
+
+    matrix = commands.add_parser(
+        "experiment-matrix", help="Run a repeated endpoint-backed experiment matrix."
+    )
+    matrix.add_argument("--experiment", required=True)
+    matrix.add_argument("--variant", required=True)
+    matrix.add_argument("--base-url", required=True)
+    matrix.add_argument("--config", type=Path, required=True)
+    matrix.add_argument("--output-dir", type=Path, required=True)
+    matrix.add_argument("--backend-version", default="unknown")
+
+    quality = commands.add_parser(
+        "score-quality", help="Score saved deterministic predictions."
+    )
+    quality.add_argument("--dataset", type=Path, required=True)
+    quality.add_argument("--predictions", type=Path, required=True)
+    quality.add_argument("--output", type=Path, required=True)
+
+    gateway = commands.add_parser(
+        "production-gateway", help="Run the overload-safe canary gateway."
+    )
+    gateway.add_argument("--config", type=Path, required=True)
+    gateway.add_argument("--host", default="127.0.0.1")
+    gateway.add_argument("--port", type=int, default=9000)
     return parser
 
 
@@ -175,6 +202,40 @@ def _run_online(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_matrix(args: argparse.Namespace) -> int:
+    required = {
+        "model", "model_revision", "input_size_hints", "output_tokens",
+        "concurrency", "warmup_requests", "measured_requests", "repetitions",
+        "timeout_seconds", "seed",
+    }
+    config = load_matrix(args.config, required)
+    cells = expand_axes({
+        "input_size_hint": config["input_size_hints"],
+        "concurrency": config["concurrency"],
+    })
+    run_endpoint_matrix(
+        args.experiment, args.variant, args.base_url, config["model"],
+        config["model_revision"], config.get("precision", config.get("dtype", "unknown")),
+        args.backend_version, cells, args.output_dir,
+        warmup_requests=config["warmup_requests"],
+        measured_requests=config["measured_requests"], repetitions=config["repetitions"],
+        output_tokens=config["output_tokens"], timeout_seconds=config["timeout_seconds"],
+        ttft_slo_ms=config.get("ttft_slo_ms", 1000),
+        e2e_slo_ms=config.get("e2e_slo_ms", 15000), seed=config["seed"],
+    )
+    return 0
+
+
+def _score_quality(args: argparse.Namespace) -> int:
+    dataset = load_jsonl(args.dataset)
+    predictions = json.loads(args.predictions.read_text(encoding="utf-8"))
+    result = score_predictions(dataset, predictions)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     args = _parser().parse_args(argv)
     if args.command == "benchmark":
@@ -210,6 +271,15 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.backend_version,
         )
         print(f"Wrote {args.backend} results to {args.output_dir}")
+        return 0
+    if args.command == "experiment-matrix":
+        return _run_matrix(args)
+    if args.command == "score-quality":
+        return _score_quality(args)
+    if args.command == "production-gateway":
+        from .production_gateway import serve
+
+        serve(args.config, args.host, args.port)
         return 0
     raise SystemExit(f"Unknown command: {args.command}")
 

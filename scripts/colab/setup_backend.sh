@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: $0 transformers|vllm" >&2
+  echo "Usage: $0 transformers|vllm|sglang" >&2
   exit 2
 fi
 
@@ -22,6 +22,10 @@ case "${backend}" in
     ;;
   vllm)
     "${venv_dir}/bin/python" -m pip install vllm
+    "${venv_dir}/bin/python" -m pip install -e "${repo_root}"
+    ;;
+  sglang)
+    "${venv_dir}/bin/python" -m pip install "sglang[all]"
     "${venv_dir}/bin/python" -m pip install -e "${repo_root}"
     ;;
   *)

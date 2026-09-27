@@ -1,0 +1,17 @@
+{
+  "model": "Qwen/Qwen3-0.6B",
+  "model_revision": "resolve-before-run",
+  "precision": "float16",
+  "input_size_hints": [128, 512, 2048],
+  "output_tokens": 128,
+  "concurrency": [1, 2, 4, 8, 16, 32],
+  "max_num_seqs": [4, 8, 16, 32],
+  "max_num_batched_tokens": [1024, 4096, 8192],
+  "warmup_requests": 4,
+  "measured_requests": 60,
+  "repetitions": 3,
+  "ttft_slo_ms": 1000,
+  "e2e_slo_ms": 15000,
+  "timeout_seconds": 180,
+  "seed": 7
+}

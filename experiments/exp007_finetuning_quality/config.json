@@ -1,0 +1,14 @@
+{
+  "base_model": "Qwen/Qwen3-0.6B",
+  "model_revision": "resolve-before-run",
+  "dataset": "data/evaluation/systems_qa.jsonl",
+  "methods": ["lora", "qlora-nf4"],
+  "ranks": [4, 8, 16, 32],
+  "learning_rates": [0.00005, 0.0001, 0.0002],
+  "dataset_fractions": [0.25, 0.5, 1.0],
+  "epochs": 3,
+  "seeds": [7, 17, 27],
+  "max_length": 512,
+  "quality_metrics": ["exact_match", "token_f1"],
+  "max_quantized_regression": 0.03
+}

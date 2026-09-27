@@ -17,7 +17,16 @@ setup(
             "torch>=2.6,<3",
             "transformers>=5,<6",
             "uvicorn>=0.34,<1",
-        ]
+        ],
+        "production": ["fastapi>=0.115,<1", "httpx>=0.27,<1", "uvicorn>=0.34,<1"],
+        "training": [
+            "accelerate>=1,<2",
+            "bitsandbytes>=0.45,<1",
+            "datasets>=3,<5",
+            "peft>=0.14,<1",
+            "torch>=2.6,<3",
+            "transformers>=5,<6",
+        ],
     },
     entry_points={"console_scripts": ["llms-lab=llm_systems_lab.cli:main"]},
 )

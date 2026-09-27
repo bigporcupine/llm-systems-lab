@@ -1,0 +1,15 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "model_revision": "resolve-before-run",
+  "precision": "float16",
+  "sequence_lengths": [128, 512, 1024, 2048, 4096, 8192],
+  "shared_prefix_lengths": [0, 128, 512, 1024, 2048],
+  "reuse_counts": [1, 2, 4, 8, 16, 32],
+  "output_tokens": 64,
+  "concurrency": [1, 8],
+  "warmup_requests": 4,
+  "measured_requests": 60,
+  "repetitions": 3,
+  "timeout_seconds": 180,
+  "seed": 7
+}

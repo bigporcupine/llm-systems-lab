@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -ne 5 ]]; then
-  echo "Usage: $0 transformers|vllm MODEL REVISION DTYPE PORT" >&2
+  echo "Usage: $0 transformers|vllm|sglang MODEL REVISION DTYPE PORT" >&2
   exit 2
 fi
 
@@ -27,11 +27,19 @@ case "${backend}" in
       --revision "${revision}" \
       --dtype "${dtype}" \
       --port "${port}" \
+      --max-model-len "${VLLM_MAX_MODEL_LEN:-8192}" \
       --generation-config vllm
+    ;;
+  sglang)
+    exec "${venv_dir}/bin/python" -m sglang.launch_server \
+      --model-path "${model}" \
+      --revision "${revision}" \
+      --dtype "${dtype}" \
+      --host 127.0.0.1 \
+      --port "${port}"
     ;;
   *)
     echo "Unknown backend: ${backend}" >&2
     exit 2
     ;;
 esac
-

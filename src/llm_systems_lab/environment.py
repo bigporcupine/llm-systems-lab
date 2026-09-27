@@ -60,7 +60,10 @@ def capture_environment() -> Dict[str, Any]:
         "cpu_count": os.cpu_count(),
         "packages": {
             name: version
-            for name in ("torch", "transformers", "vllm")
+            for name in (
+                "torch", "transformers", "vllm", "sglang", "llama-cpp-python",
+                "tensorrt_llm", "peft", "bitsandbytes", "datasets", "httpx",
+            )
             if (version := _package_version(name)) is not None
         },
         "git_commit": _git_commit(),

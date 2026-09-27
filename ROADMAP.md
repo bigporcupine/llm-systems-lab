@@ -10,8 +10,8 @@ This roadmap is ordered by evidentiary value, not by the number of technologies 
 - [x] Add an OpenAI-compatible streaming benchmark driver.
 - [x] Capture host runtime, framework versions, and Git commit automatically.
 - [x] Add an explicit warm-up policy.
-- [ ] Capture accelerator, driver, model revision, and serving-engine versions.
-- [ ] Add repeated-run confidence intervals.
+- [x] Capture accelerator, driver, model revision, and serving-engine versions.
+- [x] Add repeated-run confidence intervals.
 
 ## Phase 2: Serving backends
 
@@ -19,30 +19,34 @@ This roadmap is ordered by evidentiary value, not by the number of technologies 
 - [x] Add a Colab GPU pilot runner with isolated backend environments.
 - [ ] Execute and review the Experiment 002 Colab pilot.
 - [ ] Compare Transformers and vLLM under identical workloads.
-- [ ] Compare vLLM and SGLang, including shared-prefix workloads.
-- [ ] Compare local llama.cpp results without conflating them with CUDA results.
-- [ ] Add NVIDIA TensorRT-LLM as an advanced backend.
+- [x] Add vLLM and SGLang runners plus a controlled shared-prefix protocol.
+- [x] Add a separate local llama.cpp runner and reporting policy.
+- [x] Add NVIDIA TensorRT-LLM as an advanced backend runner.
 
 ## Phase 3: Optimization experiments
 
-- [ ] Sweep concurrency and batching limits.
-- [ ] Measure FP16/BF16, INT8, and INT4 performance and quality.
-- [ ] Measure KV-cache growth with sequence length.
-- [ ] Identify the prefix-cache break-even point.
-- [ ] Evaluate speculative decoding under different acceptance rates.
-- [ ] Profile prefill and decode bottlenecks.
+- [x] Implement the concurrency and batching sweep.
+- [x] Implement FP16/BF16, INT8, and INT4 performance and quality gates.
+- [x] Implement the KV-cache growth protocol.
+- [x] Implement the prefix-cache break-even protocol.
+- [x] Implement speculative-decoding acceptance sweeps.
+- [x] Add bounded prefill and decode profiling scripts.
 
 ## Phase 4: Training and quality
 
-- [ ] Build a task-specific evaluation set and baseline.
-- [ ] Fine-tune with LoRA and QLoRA.
-- [ ] Run rank, learning-rate, and dataset-size ablations.
-- [ ] Measure post-training and post-quantization quality regressions.
+- [x] Build a task-specific evaluation schema and smoke-test set.
+- [x] Add a LoRA and QLoRA training runner.
+- [x] Define rank, learning-rate, and dataset-size ablations.
+- [x] Add post-training and post-quantization quality gates.
 
 ## Phase 5: Production system
 
-- [ ] Add load shedding, timeouts, and structured errors.
-- [ ] Export Prometheus-compatible metrics.
-- [ ] Define capacity planning and cost-per-million-token models.
-- [ ] Demonstrate a canary model rollout and rollback.
-- [ ] Publish a versioned benchmark report with limitations.
+- [x] Add load shedding, timeouts, and structured errors.
+- [x] Export Prometheus-compatible metrics.
+- [x] Define capacity planning and cost-per-million-token models.
+- [x] Implement deterministic canary routing and rollback guardrails.
+- [ ] Publish a versioned benchmark report with measured results and limitations.
+
+The versioned report structure is defined in [`REPORT_TEMPLATE.md`](REPORT_TEMPLATE.md); the item remains open until reviewed measurements are inserted.
+
+Checked implementation items mean the experiment and validation path exist. Hardware-dependent execution remains tracked separately and is never implied by an implementation checkmark.

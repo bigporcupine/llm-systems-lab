@@ -1,0 +1,15 @@
+{
+  "target_model": "Qwen/Qwen3-1.7B",
+  "target_revision": "resolve-before-run",
+  "draft_models": ["Qwen/Qwen3-0.6B"],
+  "speculative_tokens": [1, 3, 5, 8],
+  "workloads": ["high-agreement", "general", "adversarial-low-agreement"],
+  "input_size_hints": [128, 1024],
+  "output_tokens": 256,
+  "concurrency": [1, 8],
+  "warmup_requests": 4,
+  "measured_requests": 60,
+  "repetitions": 3,
+  "timeout_seconds": 240,
+  "seed": 7
+}

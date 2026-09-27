@@ -1,0 +1,17 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "model_revision": "resolve-before-run",
+  "variants": ["fp16", "bf16", "int8-weight-only", "awq-int4"],
+  "input_size_hints": [128, 512],
+  "output_tokens": 128,
+  "concurrency": [1, 8],
+  "warmup_requests": 4,
+  "measured_requests": 60,
+  "repetitions": 3,
+  "quality_dataset": "data/evaluation/systems_qa.jsonl",
+  "max_exact_match_drop": 0.03,
+  "ttft_slo_ms": 1000,
+  "e2e_slo_ms": 15000,
+  "timeout_seconds": 180,
+  "seed": 7
+}

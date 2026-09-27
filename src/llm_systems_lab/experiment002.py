@@ -10,6 +10,7 @@ from .metrics import summarize
 from .models import BenchmarkMetadata, BenchmarkResult
 from .online import run_online_benchmark
 from .reporting import write_json
+from .statistics import bootstrap_mean_ci
 from .workloads import deterministic_prompt
 
 
@@ -50,9 +51,12 @@ def _aggregate(runs: List[BenchmarkResult]) -> Dict[str, Any]:
     aggregate: Dict[str, Any] = {}
     for name in metric_names:
         values = [float(run.metrics[name]) for run in runs if run.metrics[name] is not None]
+        mean, lower, upper = bootstrap_mean_ci(values, samples=2000, seed=7)
         aggregate[name] = {
-            "mean": round(statistics.mean(values), 3),
+            "mean": round(mean, 3),
             "stdev": round(statistics.stdev(values), 3) if len(values) > 1 else 0.0,
+            "ci95_lower": round(lower, 3),
+            "ci95_upper": round(upper, 3),
             "runs": len(values),
         }
     return aggregate

@@ -269,6 +269,14 @@ Before running, the Colab notebook resolves `model_revision` from `main` to an i
 
 Open [`notebooks/exp002_colab_runner.ipynb`](../../notebooks/exp002_colab_runner.ipynb) in Google Colab, select a GPU runtime, and execute cells in order.
 
+## Extended backend matrix
+
+The pilot establishes the protocol with Transformers and vLLM. The formal backend matrix in `backend_matrix.json` adds SGLang and TensorRT-LLM on the same CUDA host. `scripts/colab/setup_backend.sh sglang` creates an isolated SGLang environment; `scripts/start_tensorrt_llm_backend.sh` launches a separately installed TensorRT-LLM environment.
+
+llama.cpp is intentionally reported in a separate CPU table. Use a pinned GGUF file, record its SHA-256 hash, launch it with `scripts/start_llamacpp_backend.sh`, and run the same OpenAI-compatible client. CPU/GGUF results must not be ranked as if they used the CUDA model artifact.
+
+For SGLang versus vLLM, run both ordinary prompts and Experiment 005's byte-identical shared-prefix corpus. Record each engine's cache policy and cache metrics alongside user-visible TTFT and throughput.
+
 The notebook:
 
 1. records the runtime and GPU;

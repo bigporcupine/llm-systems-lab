@@ -1,0 +1,21 @@
+{
+  "stable_base_url": "http://127.0.0.1:8000/v1",
+  "canary_base_url": "http://127.0.0.1:8001/v1",
+  "canary_fraction": 0.05,
+  "max_in_flight": 16,
+  "queue_timeout_ms": 100,
+  "request_timeout_seconds": 30,
+  "rollback": {
+    "minimum_requests": 100,
+    "max_error_rate": 0.02,
+    "max_p95_latency_regression": 0.20,
+    "max_quality_regression": 0.03
+  },
+  "capacity": {
+    "target_utilization": 0.70,
+    "peak_requests_per_second": 10,
+    "average_input_tokens": 512,
+    "average_output_tokens": 128,
+    "gpu_hourly_cost_usd": 1.00
+  }
+}

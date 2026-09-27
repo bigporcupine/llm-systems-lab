@@ -1,0 +1,18 @@
+{
+  "cuda_primary": ["transformers", "vllm", "sglang", "tensorrt-llm"],
+  "cpu_separate": ["llama.cpp"],
+  "required_controls": [
+    "model_revision_or_gguf_hash",
+    "backend_version",
+    "hardware",
+    "precision_or_quantization",
+    "prompt_corpus_hash",
+    "sampling_parameters"
+  ],
+  "required_workloads": [
+    "short-prompt-short-output",
+    "long-prompt-short-output",
+    "short-prompt-long-output",
+    "shared-prefix"
+  ]
+}

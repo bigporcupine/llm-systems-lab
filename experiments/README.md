@@ -26,6 +26,17 @@ Experiment 002 is the first real-model experiment. Part A compares a transparent
 
 Part B will compare vLLM and SGLang after the Part A pipeline is validated, including a shared-prefix workload designed to study prefix reuse.
 
+## Experiments 003–008
+
+The remaining experiment packages are implemented as protocols and runners; their hardware-dependent result artifacts are intentionally not pre-populated.
+
+- [003: Batching and Saturation](exp003_batching_saturation/README.md)
+- [004: Precision, Quantization, and Quality](exp004_precision_quantization/README.md)
+- [005: KV Cache and Prefix Cache](exp005_kv_prefix_cache/README.md)
+- [006: Speculative Decoding and Profiling](exp006_speculative_profiling/README.md)
+- [007: LoRA, QLoRA, Ablations, and Quality Regression](exp007_finetuning_quality/README.md)
+- [008: Production Readiness](exp008_production_readiness/README.md)
+
 ## Status language
 
 - **Completed:** The experiment has been executed and its scoped results are published.
