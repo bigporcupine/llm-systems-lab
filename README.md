@@ -6,18 +6,6 @@ LLM Systems Lab is an experiment-driven project for production inference enginee
 
 > Project status: the measurement foundation is runnable. Real serving-backend benchmarks are the next milestone. No synthetic result in this repository is presented as hardware performance.
 
-## What makes this project different
-
-This is not a collection of chatbot demos. It is built around questions that matter in real systems:
-
-- When does continuous batching improve throughput enough to justify queueing latency?
-- Does INT4 reduce only memory, or does it improve latency for this exact workload and GPU?
-- At what prefix length and cache-hit rate does prefix caching break even?
-- How much quality is lost for each unit of latency or cost saved?
-- Which configuration maximizes throughput, and which maximizes SLO-compliant goodput?
-
-The repository treats a performance claim as incomplete unless another person can inspect the raw observations, reproduce the aggregation, and understand where the conclusion stops applying.
-
 ## Current capability
 
 The first systems lab defines and implements:
