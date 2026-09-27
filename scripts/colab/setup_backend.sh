@@ -10,7 +10,10 @@ backend="$1"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 venv_dir="${repo_root}/.venv-${backend}"
 
-python3 -m venv "${venv_dir}"
+# Colab's Python images do not always ship a working ensurepip module.  Use
+# virtualenv so environment creation is independent of that image detail.
+python3 -m pip install --quiet --upgrade virtualenv
+python3 -m virtualenv --clear "${venv_dir}"
 "${venv_dir}/bin/python" -m pip install --upgrade pip wheel
 
 case "${backend}" in
@@ -29,4 +32,3 @@ esac
 
 "${venv_dir}/bin/python" --version
 echo "Prepared ${backend} environment at ${venv_dir}"
-
