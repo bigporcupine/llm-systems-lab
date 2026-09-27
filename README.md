@@ -54,6 +54,8 @@ Start with [Lab 00: Measurement Before Optimization](labs/00_measurement_basics/
 
 The first completed study is [Experiment 001: Measuring LLM Inference Correctly](experiments/exp001_measurement_basics/README.md), including its [measured results](experiments/exp001_measurement_basics/RESULTS.md).
 
+Experiment 002 is now in its Colab pilot stage: [From Model Execution to Production Serving](experiments/exp002_serving_engines/README.md) compares a transparent Transformers baseline with vLLM on the same recorded GPU runtime.
+
 Planned experiment sequence:
 
 1. Measurement correctness and benchmark hygiene

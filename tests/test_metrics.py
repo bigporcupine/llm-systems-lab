@@ -1,6 +1,11 @@
 import unittest
 
-from llm_systems_lab.metrics import inter_token_latencies, percentile, summarize
+from llm_systems_lab.metrics import (
+    inter_token_latencies,
+    percentile,
+    summarize,
+    time_per_output_token,
+)
 from llm_systems_lab.models import RequestTrace
 
 
@@ -18,6 +23,7 @@ class MetricsTests(unittest.TestCase):
 
     def test_inter_token_latency_excludes_time_to_first_token(self):
         self.assertEqual(inter_token_latencies(self.traces[0]), [30.0, 30.0])
+        self.assertEqual(time_per_output_token(self.traces[0]), 30.0)
 
     def test_summary_uses_wall_clock_for_throughput(self):
         metrics = summarize(
@@ -36,4 +42,3 @@ class MetricsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

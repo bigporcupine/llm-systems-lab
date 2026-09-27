@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from .environment import capture_environment
 from .experiment001 import run_experiment
+from .experiment002 import run_backend_matrix
 from .metrics import summarize
 from .mock_server import MockServerConfig, serve_forever
 from .models import BenchmarkMetadata, BenchmarkResult, RequestTrace
@@ -72,6 +73,16 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("experiments/exp001_measurement_basics/results"),
     )
+
+    experiment002 = commands.add_parser(
+        "experiment-002-backend",
+        help="Run the Experiment 002 matrix against one live backend.",
+    )
+    experiment002.add_argument("--backend", required=True)
+    experiment002.add_argument("--base-url", required=True)
+    experiment002.add_argument("--config", type=Path, required=True)
+    experiment002.add_argument("--output-dir", type=Path, required=True)
+    experiment002.add_argument("--backend-version", default="unknown")
     return parser
 
 
@@ -189,6 +200,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.command == "experiment-001":
         run_experiment(args.output_dir)
         print(f"Wrote Experiment 001 results to {args.output_dir}")
+        return 0
+    if args.command == "experiment-002-backend":
+        run_backend_matrix(
+            args.backend,
+            args.base_url,
+            args.config,
+            args.output_dir,
+            args.backend_version,
+        )
+        print(f"Wrote {args.backend} results to {args.output_dir}")
         return 0
     raise SystemExit(f"Unknown command: {args.command}")
 

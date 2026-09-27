@@ -31,15 +31,24 @@ def stream_request(
     output_tokens: int,
     timeout_seconds: float,
     controlled_mock: bool = False,
+    prompt: str = "",
+    force_output_length: bool = False,
 ) -> RequestTrace:
     """Measure one streamed request using a monotonic high-resolution clock."""
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": "x " * input_tokens}],
+        "messages": [
+            {"role": "user", "content": prompt or ("x " * input_tokens)}
+        ],
         "stream": True,
         "stream_options": {"include_usage": True},
         "max_tokens": output_tokens,
+        "temperature": 0.0,
     }
+    if force_output_length:
+        # vLLM supports min_tokens as an OpenAI-compatible extension. The
+        # reference Transformers server always emits exactly max_tokens.
+        payload["min_tokens"] = output_tokens
     if controlled_mock:
         payload.update(
             {"mock_request_id": request_id, "mock_input_tokens": input_tokens}
@@ -106,6 +115,8 @@ def run_online_benchmark(
     output_tokens: int,
     timeout_seconds: float = 30.0,
     controlled_mock: bool = False,
+    prompt: str = "",
+    force_output_length: bool = False,
 ) -> OnlineRun:
     if requests <= 0 or concurrency <= 0:
         raise ValueError("requests and concurrency must be positive")
@@ -121,6 +132,8 @@ def run_online_benchmark(
                 output_tokens,
                 timeout_seconds,
                 controlled_mock,
+                prompt,
+                force_output_length,
             )
             for index in range(requests)
         ]

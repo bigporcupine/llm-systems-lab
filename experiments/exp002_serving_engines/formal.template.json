@@ -1,0 +1,15 @@
+{
+  "model": "Qwen/Qwen3-1.7B",
+  "model_revision": "RESOLVE_IN_COLAB_BEFORE_RUNNING",
+  "dtype": "float16",
+  "input_size_hints": [128, 512],
+  "output_tokens": 128,
+  "concurrency": [1, 4, 8, 16],
+  "warmup_requests": 20,
+  "measured_requests": 100,
+  "repetitions": 3,
+  "ttft_slo_ms": 1000,
+  "e2e_slo_ms": 30000,
+  "timeout_seconds": 180,
+  "seed": 7
+}

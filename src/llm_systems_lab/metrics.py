@@ -28,6 +28,18 @@ def inter_token_latencies(trace: RequestTrace) -> List[float]:
     return [later - earlier for earlier, later in zip(timestamps, timestamps[1:])]
 
 
+def time_per_output_token(trace: RequestTrace) -> Optional[float]:
+    """Estimate decode cadence from first to last observed content event.
+
+    This remains an estimate for generic OpenAI-compatible APIs because one
+    SSE content event is not guaranteed to contain exactly one token.
+    """
+    if trace.output_tokens <= 1 or len(trace.token_timestamps_ms) < 2:
+        return None
+    elapsed = trace.token_timestamps_ms[-1] - trace.token_timestamps_ms[0]
+    return elapsed / (trace.output_tokens - 1)
+
+
 def _rounded(value: Optional[float]) -> Optional[float]:
     return None if value is None else round(value, 3)
 
@@ -48,6 +60,11 @@ def summarize(
     ]
     totals = [trace.total_latency_ms for trace in successful]
     itls = [latency for trace in successful for latency in inter_token_latencies(trace)]
+    tpots = [
+        value
+        for trace in successful
+        if (value := time_per_output_token(trace)) is not None
+    ]
 
     if wall_time_ms is None:
         # The only safe default is serial execution. Concurrent benchmark
@@ -74,6 +91,8 @@ def summarize(
         "benchmark_wall_time_ms": _rounded(wall_time_ms),
         "requests_total": float(len(records)),
         "requests_succeeded": float(len(successful)),
+        "input_tokens_total": float(sum(trace.input_tokens for trace in successful)),
+        "output_tokens_total": float(output_tokens),
         "success_rate": _rounded(len(successful) / len(records) if records else 0.0),
         "ttft_p50_ms": _rounded(percentile(ttfts, 0.50)),
         "ttft_p95_ms": _rounded(percentile(ttfts, 0.95)),
@@ -83,6 +102,8 @@ def summarize(
         "e2e_p99_ms": _rounded(percentile(totals, 0.99)),
         "itl_p50_ms": _rounded(percentile(itls, 0.50)),
         "itl_p95_ms": _rounded(percentile(itls, 0.95)),
+        "tpot_p50_ms": _rounded(percentile(tpots, 0.50)),
+        "tpot_p95_ms": _rounded(percentile(tpots, 0.95)),
         "request_throughput_rps": _rounded(len(successful) / divisor if divisor else None),
         "output_throughput_tokens_s": _rounded(output_tokens / divisor if divisor else None),
         "goodput_rps": _rounded(good_requests / divisor if divisor else None),

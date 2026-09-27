@@ -27,6 +27,28 @@ def _git_commit() -> Optional[str]:
         return None
 
 
+def _nvidia_gpu() -> Optional[Dict[str, str]]:
+    fields = "name,memory.total,driver_version"
+    try:
+        output = subprocess.check_output(
+            [
+                "nvidia-smi",
+                f"--query-gpu={fields}",
+                "--format=csv,noheader,nounits",
+                "--id=0",
+            ],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+        ).strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if not output:
+        return None
+    name, memory_mb, driver = [part.strip() for part in output.splitlines()[0].split(",")]
+    return {"name": name, "memory_total_mb": memory_mb, "driver": driver}
+
+
 def capture_environment() -> Dict[str, Any]:
     """Return stable environment facts without collecting user identifiers."""
     return {
@@ -43,5 +65,5 @@ def capture_environment() -> Dict[str, Any]:
         },
         "git_commit": _git_commit(),
         "executable": os.path.basename(sys.executable),
+        "nvidia_gpu": _nvidia_gpu(),
     }
-

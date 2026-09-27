@@ -15,8 +15,11 @@ This roadmap is ordered by evidentiary value, not by the number of technologies 
 
 ## Phase 2: Serving backends
 
-- [ ] Establish a Hugging Face Transformers baseline.
+- [x] Implement a transparent Hugging Face Transformers baseline server.
+- [x] Add a Colab GPU pilot runner with isolated backend environments.
+- [ ] Execute and review the Experiment 002 Colab pilot.
 - [ ] Compare Transformers and vLLM under identical workloads.
+- [ ] Compare vLLM and SGLang, including shared-prefix workloads.
 - [ ] Compare local llama.cpp results without conflating them with CUDA results.
 - [ ] Add NVIDIA TensorRT-LLM as an advanced backend.
 
