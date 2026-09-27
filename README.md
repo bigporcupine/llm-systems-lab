@@ -2,7 +2,7 @@
 
 **A reproducible, experiment-driven guide to understanding and optimizing LLM training and inference—from PyTorch fundamentals to production serving.**
 
-LLM Systems Lab is an English-only, experiment-driven project for production inference engineering. Every optimization is expected to include raw measurements, workload and environment metadata, tail latency, throughput, quality impact, limitations, and a reproducible command.
+LLM Systems Lab is an experiment-driven project for production inference engineering. Every optimization is expected to include raw measurements, workload and environment metadata, tail latency, throughput, quality impact, limitations, and a reproducible command.
 
 > Project status: the measurement foundation is runnable. Real serving-backend benchmarks are the next milestone. No synthetic result in this repository is presented as hardware performance.
 
