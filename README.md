@@ -6,6 +6,15 @@ LLM Systems Lab is an experiment-driven project for production inference enginee
 
 > Project status: the measurement foundation is runnable. Real serving-backend benchmarks are the next milestone. No synthetic result in this repository is presented as hardware performance.
 
+## Experiments
+
+| Experiment | Purpose | Status | Run |
+|---|---|---|---|
+| [001 — Measuring LLM Inference Correctly](experiments/exp001_measurement_basics/README.md) | Validate streaming latency, concurrent throughput, tail behavior, warm-up policy, and goodput using known server timing. | Completed | `llms-lab experiment-001` |
+| [002 — From Model Execution to Production Serving](experiments/exp002_serving_engines/README.md) | Compare a transparent Transformers batch-one reference with vLLM on the same model, GPU, precision, and workload. | Colab pilot ready | [Open the Colab runner](https://colab.research.google.com/github/bigporcupine/llm-systems-lab/blob/main/notebooks/exp002_colab_runner.ipynb) |
+
+See the [experiment index](experiments/README.md) for scope, outputs, and the distinction between completed results and planned work.
+
 ## Current capability
 
 The first systems lab defines and implements:
@@ -51,10 +60,6 @@ PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
 ## Learning path
 
 Start with [Lab 00: Measurement Before Optimization](labs/00_measurement_basics/README.md), then follow [the systems learning path](LEARNING_PATH.md) and [project roadmap](ROADMAP.md).
-
-The first completed study is [Experiment 001: Measuring LLM Inference Correctly](experiments/exp001_measurement_basics/README.md), including its [measured results](experiments/exp001_measurement_basics/RESULTS.md).
-
-Experiment 002 is now in its Colab pilot stage: [From Model Execution to Production Serving](experiments/exp002_serving_engines/README.md) compares a transparent Transformers baseline with vLLM on the same recorded GPU runtime.
 
 Planned experiment sequence:
 
