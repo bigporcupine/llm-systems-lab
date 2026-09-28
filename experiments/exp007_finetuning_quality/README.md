@@ -38,4 +38,29 @@ python scripts/run_ablation_matrix.py \
 
 After reviewing `ablation-plan.json`, add `--execute` to run all LoRA/QLoRA cells and seeds sequentially.
 
+Each completed cell writes `run.json` containing the immutable training and evaluation dataset hashes, selected training IDs, trainer metrics and loss history, allocated and reserved peak GPU memory, adapter size, every frozen-set prediction, and deterministic exact-match/token-F1 scores. The evaluation set is loaded only after training finishes.
+
+## Serving-quality cross-check
+
+Use the same `evaluate-endpoint` command and frozen dataset for the base model, accepted adapter, and quantized-base-plus-adapter endpoints. Start an adapter endpoint with:
+
+```bash
+bash scripts/start_vllm_lora.sh \
+  Qwen/Qwen3-0.6B "$MODEL_REVISION" systems-lora \
+  artifacts/exp007/lora-r8-lr1e-4-seed7 float16 8000
+```
+
+For a supported quantized base, pass the engine's explicit quantization method as the seventh argument. The endpoint model name is the adapter name:
+
+```bash
+python -m llm_systems_lab evaluate-endpoint \
+  --base-url http://127.0.0.1:8000/v1 \
+  --model systems-lora --model-revision "$MODEL_REVISION" \
+  --backend-version "$BACKEND_VERSION" \
+  --dataset data/evaluation/systems_qa.jsonl \
+  --output-dir artifacts/exp007/serving-quality/lora
+```
+
+Preserve separate endpoint artifacts for the unadapted base, accepted adapter, and quantized-base-plus-adapter configurations. Never compare the training-time evaluation with endpoint results unless prompt formatting and token limits are identical and documented.
+
 The experiment is complete only when the base, adapted, and post-quantization models share the same evaluation protocol and raw predictions are retained.

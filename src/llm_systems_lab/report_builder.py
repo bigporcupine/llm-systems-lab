@@ -82,10 +82,14 @@ def _identity_rows(records: Iterable[Tuple[Path, Dict[str, Any]]]) -> List[Tuple
         workload = metadata.get("workload") or value.get("workload") or {}
         if environment.get("git_commit"):
             commits.add(str(environment["git_commit"]))
-        model = metadata.get("model") or value.get("model")
+        model = metadata.get("model") or value.get("model") or value.get("base_model")
         revision = workload.get("model_revision") or value.get("model_revision") or value.get("target_revision")
         if model or revision:
             models.add(f"{model or 'unspecified'} @ {revision or 'unspecified'}")
+        draft_model = workload.get("draft_model") or value.get("draft_model")
+        draft_revision = workload.get("draft_revision") or value.get("draft_revision")
+        if draft_model or draft_revision:
+            models.add(f"draft: {draft_model or 'unspecified'} @ {draft_revision or 'unspecified'}")
         backend = metadata.get("backend") or value.get("backend") or "unspecified"
         version = workload.get("backend_version") or value.get("backend_version") or value.get("baseline_backend_version")
         backends.add(f"{backend} {version or 'unspecified'}")
@@ -176,7 +180,12 @@ def build_report(
         for path, value in specialized:
             kind = value.get("experiment") or value.get("source") or "specialized result"
             details = []
-            for key in ("cost_per_million_output_tokens_usd", "capacity", "break_even_by_prefix_length", "train_metrics"):
+            for key in (
+                "cost_per_million_total_tokens_usd",
+                "cost_per_million_output_tokens_usd",
+                "pricing", "capacity", "break_even_by_prefix_length",
+                "train_metrics", "evaluation_scores",
+            ):
                 if key in value:
                     details.append(f"{key}={json.dumps(value[key], sort_keys=True)}")
             suffix = "; ".join(details) if details else "See audited raw artifact."

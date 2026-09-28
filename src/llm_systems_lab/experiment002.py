@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .environment import capture_environment
+from .config_resolution import require_immutable_revision
+from .gpu_telemetry import GpuTelemetrySampler
 from .metrics import summarize
 from .models import BenchmarkMetadata, BenchmarkResult
 from .online import run_online_benchmark
@@ -67,12 +69,19 @@ def run_backend_matrix(
     base_url: str,
     config_path: Path,
     output_dir: Path,
-    backend_version: str = "unknown",
+    backend_version: str,
 ) -> Dict[str, Any]:
+    if not backend_version.strip() or backend_version.strip().lower() == "unknown":
+        raise ValueError("backend_version must identify the measured serving engine")
     config = load_config(config_path)
+    require_immutable_revision(config["model_revision"])
     output_dir.mkdir(parents=True, exist_ok=True)
     environment = capture_environment()
     cells: List[Dict[str, Any]] = []
+    telemetry = GpuTelemetrySampler(
+        output_dir / "gpu-telemetry.json",
+        interval_seconds=float(config.get("gpu_telemetry_interval_seconds", 1.0)),
+    ).start()
 
     for input_hint in config["input_size_hints"]:
         prompt = deterministic_prompt(input_hint, config["seed"])
@@ -145,6 +154,7 @@ def run_backend_matrix(
                 }
             )
 
+    telemetry_artifact = telemetry.stop()
     summary = {
         "schema_version": "1.0",
         "experiment": "exp002-serving-engines",
@@ -152,6 +162,11 @@ def run_backend_matrix(
         "backend_version": backend_version,
         "config": config,
         "environment": environment,
+        "gpu_telemetry": {
+            "path": "gpu-telemetry.json",
+            "available": telemetry_artifact["available"],
+            "sample_count": telemetry_artifact["sample_count"],
+        },
         "cells": cells,
     }
     (output_dir / "summary.json").write_text(

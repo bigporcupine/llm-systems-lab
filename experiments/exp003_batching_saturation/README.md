@@ -17,6 +17,7 @@ An engine can improve aggregate throughput while making interactive latency unus
 - Restart the server for every engine configuration. Exclude startup and compilation from steady-state request metrics, but record startup separately.
 - Warm up every cell, then collect three independent measured repetitions.
 - Save every request trace. Report TTFT p50/p95, E2E p95, output tokens/s, request goodput, and bootstrap 95% confidence intervals.
+- Preserve the automatically sampled `gpu-telemetry.json` time series so the saturation knee can be compared with GPU utilization, memory, temperature, and power.
 - Select the saturation knee as the highest-throughput cell satisfying the configured p95 E2E budget.
 
 ## Run
@@ -28,6 +29,7 @@ python -m llm_systems_lab experiment-matrix \
   --experiment exp003-batching-saturation \
   --variant vllm-seqs-16-tokens-4096 \
   --base-url http://127.0.0.1:8000/v1 \
+  --backend-version "$BACKEND_VERSION" \
   --config experiments/exp003_batching_saturation/config.json \
   --output-dir artifacts/exp003/vllm-seqs-16-tokens-4096
 ```

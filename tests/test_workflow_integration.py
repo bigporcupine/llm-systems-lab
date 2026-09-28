@@ -39,7 +39,7 @@ class WorkflowIntegrationTests(unittest.TestCase):
                 encoding="utf-8",
             )
             artifact = evaluate_endpoint(
-                self.first_url, "mock", "test-revision", "mock-1.0",
+                self.first_url, "mock", "d" * 40, "mock-1.0",
                 dataset, root / "out", max_tokens=2
             )
             self.assertEqual(artifact["scores"]["exact_match"], 1.0)
@@ -51,30 +51,39 @@ class WorkflowIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             artifact = run_prefix_cache_experiment(
-                self.first_url, self.second_url, "mock", "test-revision",
+                self.first_url, self.second_url, "mock", "d" * 40,
                 "mock-1.0", [8], [1, 2],
                 output_tokens=2, concurrency=2, repetitions=1,
                 timeout_seconds=10, output_dir=output,
+                disabled_metrics_url=f"http://127.0.0.1:{self.first.server_port}/metrics",
+                enabled_metrics_url=f"http://127.0.0.1:{self.second.server_port}/metrics",
             )
             self.assertEqual(len(artifact["rows"]), 2)
             self.assertEqual(len(artifact["raw_runs"]), 4)
             self.assertTrue(all(run["traces"] for run in artifact["raw_runs"]))
+            self.assertTrue(all(
+                run["engine_metric_delta"]["llms_lab_mock_requests_total"] == run["reuse_count"]
+                for run in artifact["raw_runs"]
+            ))
+            self.assertTrue(all(run["engine_metrics_before_text"] for run in artifact["raw_runs"]))
             self.assertTrue((output / "prefix-cache.json").is_file())
 
     def test_speculative_workflow_writes_each_raw_run(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             artifact = run_speculative_comparison(
-                self.first_url, self.second_url, "mock", "test-revision",
+                self.first_url, self.second_url, "mock", "d" * 40,
                 "mock-1.0", "mock-1.0", '{"draft":"mock"}',
                 ["general"], [8],
                 output_tokens=2, concurrency=2, measured_requests=2,
                 repetitions=1, timeout_seconds=10, output_dir=output,
+                draft_model="mock-draft", draft_revision="e" * 40,
             )
             self.assertEqual(len(artifact["cells"]), 2)
             self.assertEqual(len(list(output.glob("target-only_*.json"))), 1)
             self.assertEqual(len(list(output.glob("speculative_*.json"))), 1)
             self.assertTrue((output / "summary.json").is_file())
+            self.assertEqual(artifact["draft_revision"], "e" * 40)
 
 
 if __name__ == "__main__":

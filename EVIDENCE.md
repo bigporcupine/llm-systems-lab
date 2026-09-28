@@ -13,7 +13,7 @@ python -m llm_systems_lab resolve-config \
   --output artifacts/exp003/resolved-config.json
 ```
 
-Review the resolved commit identifiers before spending accelerator time.
+Review the resolved commit identifiers before spending accelerator time. Formal Hugging Face revisions must be full 40-character commit SHAs; branch names, tags, abbreviated SHAs, and arbitrary labels are rejected before execution and again during artifact audit.
 
 ## 2. Create the pre-run manifest
 

@@ -7,7 +7,30 @@ import random
 from pathlib import Path
 
 from llm_systems_lab.environment import capture_environment
+from llm_systems_lab.config_resolution import require_immutable_revision
 from llm_systems_lab.manifest import sha256_file
+from llm_systems_lab.quality import load_jsonl, score_predictions
+
+
+def evaluate_model(model, tokenizer, rows, max_new_tokens):
+    """Run deterministic generation and retain every frozen-set prediction."""
+    predictions = {}
+    model.eval()
+    for row in rows:
+        prompt = f"Question: {row['prompt']}\nAnswer:"
+        encoded = tokenizer(prompt, return_tensors="pt", truncation=True)
+        encoded = {name: tensor.to(model.device) for name, tensor in encoded.items()}
+        input_length = encoded["input_ids"].shape[1]
+        generated = model.generate(
+            **encoded,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+        predictions[str(row["id"])] = tokenizer.decode(
+            generated[0][input_length:], skip_special_tokens=True
+        ).strip()
+    return predictions
 
 
 def parse_args():
@@ -27,8 +50,10 @@ def main():
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if not 0 < args.dataset_fraction <= 1:
         raise SystemExit("--dataset-fraction must be in (0, 1]")
-    if config["model_revision"] == "resolve-before-run":
-        raise SystemExit("Resolve model_revision to an immutable commit before training")
+    try:
+        require_immutable_revision(config["model_revision"])
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
     if args.rank not in config["ranks"] or args.learning_rate not in config["learning_rates"]:
         raise SystemExit("Rank and learning rate must be declared in the experiment config")
     if args.dataset_fraction not in config["dataset_fractions"] or args.seed not in config["seeds"]:
@@ -65,7 +90,36 @@ def main():
     trainer = Trainer(model=model, args=training, train_dataset=dataset, processing_class=tokenizer)
     result = trainer.train()
     trainer.save_model()
-    metadata = {"schema_version": "1.0", "source": "training", "base_model": config["base_model"], "model_revision": config["model_revision"], "config": config, "method": args.method, "rank": args.rank, "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction, "seed": args.seed, "training_dataset_sha256": sha256_file(Path(config["training_dataset"])), "selected_training_ids": [row["id"] for row in rows], "environment": capture_environment(), "train_metrics": result.metrics, "peak_gpu_memory_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None}
+    evaluation_path = Path(config["evaluation_dataset"])
+    evaluation_rows = load_jsonl(evaluation_path)
+    predictions = evaluate_model(
+        model, tokenizer, evaluation_rows, int(config.get("max_eval_new_tokens", 128))
+    )
+    scores = score_predictions(evaluation_rows, predictions)
+    adapter_size_bytes = sum(
+        path.stat().st_size for path in args.output_dir.rglob("*") if path.is_file()
+    )
+    metadata = {
+        "schema_version": "1.0", "source": "training",
+        "base_model": config["base_model"], "model_revision": config["model_revision"],
+        "config": config, "method": args.method, "rank": args.rank,
+        "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction,
+        "seed": args.seed,
+        "training_dataset_sha256": sha256_file(Path(config["training_dataset"])),
+        "selected_training_ids": [row["id"] for row in rows],
+        "evaluation_dataset_sha256": sha256_file(evaluation_path),
+        "evaluation_ids": [row["id"] for row in evaluation_rows],
+        "predictions": predictions, "evaluation_scores": scores,
+        "environment": capture_environment(), "train_metrics": result.metrics,
+        "trainer_log_history": trainer.state.log_history,
+        "peak_gpu_memory_allocated_bytes": (
+            torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None
+        ),
+        "peak_gpu_memory_reserved_bytes": (
+            torch.cuda.max_memory_reserved() if torch.cuda.is_available() else None
+        ),
+        "adapter_size_bytes": adapter_size_bytes,
+    }
     (args.output_dir / "run.json").write_text(json.dumps(metadata, indent=2, default=str) + "\n", encoding="utf-8")
 
 

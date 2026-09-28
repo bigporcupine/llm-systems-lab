@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from llm_systems_lab.experiment002 import load_config
+from llm_systems_lab.experiment002 import load_config, run_backend_matrix
 from llm_systems_lab.workloads import deterministic_prompt
 
 
@@ -23,6 +23,10 @@ class Experiment002Tests(unittest.TestCase):
             path.write_text(json.dumps({"model": "test"}), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "model_revision"):
                 load_config(path)
+
+    def test_formal_runner_rejects_unknown_backend_version_before_execution(self):
+        with self.assertRaisesRegex(ValueError, "backend_version"):
+            run_backend_matrix("vllm", "http://unused", Path("unused.json"), Path("unused"), "unknown")
 
 
 if __name__ == "__main__":

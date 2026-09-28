@@ -10,6 +10,7 @@
   "epochs": 3,
   "seeds": [7, 17, 27],
   "max_length": 512,
+  "max_eval_new_tokens": 128,
   "quality_metrics": ["exact_match", "token_f1"],
   "max_quantized_regression": 0.03
 }

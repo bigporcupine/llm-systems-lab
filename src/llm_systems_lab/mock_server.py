@@ -30,6 +30,10 @@ class _RequestCounter:
             self._value += 1
             return value
 
+    def value(self) -> int:
+        with self._lock:
+            return self._value
+
 
 def create_server(
     host: str = "127.0.0.1",
@@ -47,6 +51,17 @@ def create_server(
             return
 
         def do_GET(self) -> None:
+            if self.path == "/metrics":
+                body = (
+                    "# TYPE llms_lab_mock_requests_total counter\n"
+                    f"llms_lab_mock_requests_total {counter.value()}\n"
+                ).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if self.path == "/health":
                 body = b'{"status":"ok"}'
                 self.send_response(200)
@@ -167,4 +182,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

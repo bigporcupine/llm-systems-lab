@@ -85,7 +85,7 @@ def _parser() -> argparse.ArgumentParser:
     experiment002.add_argument("--base-url", required=True)
     experiment002.add_argument("--config", type=Path, required=True)
     experiment002.add_argument("--output-dir", type=Path, required=True)
-    experiment002.add_argument("--backend-version", default="unknown")
+    experiment002.add_argument("--backend-version", required=True)
 
     matrix = commands.add_parser(
         "experiment-matrix", help="Run a repeated endpoint-backed experiment matrix."
@@ -95,7 +95,7 @@ def _parser() -> argparse.ArgumentParser:
     matrix.add_argument("--base-url", required=True)
     matrix.add_argument("--config", type=Path, required=True)
     matrix.add_argument("--output-dir", type=Path, required=True)
-    matrix.add_argument("--backend-version", default="unknown")
+    matrix.add_argument("--backend-version", required=True)
 
     quality = commands.add_parser(
         "score-quality", help="Score saved deterministic predictions."
@@ -121,6 +121,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     cache.add_argument("--disabled-url", required=True)
     cache.add_argument("--enabled-url", required=True)
+    cache.add_argument("--disabled-metrics-url")
+    cache.add_argument("--enabled-metrics-url")
     cache.add_argument("--model", required=True)
     cache.add_argument("--model-revision", required=True)
     cache.add_argument("--backend-version", required=True)
@@ -158,6 +160,8 @@ def _parser() -> argparse.ArgumentParser:
     speculative.add_argument("--speculative-metrics-url")
     speculative.add_argument("--model", required=True)
     speculative.add_argument("--target-revision", required=True)
+    speculative.add_argument("--draft-model", required=True)
+    speculative.add_argument("--draft-revision", required=True)
     speculative.add_argument("--baseline-backend-version", required=True)
     speculative.add_argument("--speculative-backend-version", required=True)
     speculative.add_argument("--speculative-config", required=True)
@@ -195,8 +199,12 @@ def _parser() -> argparse.ArgumentParser:
     production_load.add_argument("--output-tokens", type=int, default=128)
     production_load.add_argument("--timeout-seconds", type=float, default=60.0)
     production_load.add_argument("--hourly-cost-usd", type=float, required=True)
+    production_load.add_argument("--price-source", required=True)
+    production_load.add_argument("--price-date", required=True)
     production_load.add_argument("--peak-rps", type=float, required=True)
     production_load.add_argument("--target-utilization", type=float, default=0.7)
+    production_load.add_argument("--ttft-slo-ms", type=float, required=True)
+    production_load.add_argument("--e2e-slo-ms", type=float, required=True)
     production_load.add_argument("--output-dir", type=Path, required=True)
 
     canary = commands.add_parser(
@@ -420,7 +428,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.model_revision, args.backend_version,
             args.prefix_lengths, args.reuse_counts, args.output_tokens,
             args.concurrency, args.repetitions, args.timeout_seconds,
-            args.output_dir,
+            args.output_dir, disabled_metrics_url=args.disabled_metrics_url,
+            enabled_metrics_url=args.enabled_metrics_url,
         )
         return 0
     if args.command == "experiment-005-kv-memory":
@@ -445,7 +454,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.input_size_hints, args.output_tokens, args.concurrency,
             args.measured_requests, args.repetitions, args.timeout_seconds,
             args.output_dir, args.baseline_metrics_url,
-            args.speculative_metrics_url,
+            args.speculative_metrics_url, draft_model=args.draft_model,
+            draft_revision=args.draft_revision,
         )
         return 0
     if args.command == "production-gateway":
@@ -462,7 +472,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             args.requests,
             args.concurrency, args.input_tokens, args.output_tokens,
             args.timeout_seconds, args.hourly_cost_usd, args.peak_rps,
-            args.target_utilization, args.output_dir,
+            args.target_utilization, args.output_dir, args.price_source,
+            args.price_date, args.ttft_slo_ms, args.e2e_slo_ms,
         )
         return 0
     if args.command == "analyze-canary":

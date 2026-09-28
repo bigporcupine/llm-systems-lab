@@ -19,7 +19,7 @@ class EvidenceGateTests(unittest.TestCase):
                 "model": "example/model", "precision": "bf16", "source": "measured",
                 "hardware": "Tesla T4", "concurrency": 4,
                 "environment": {"git_commit": "abc123", "nvidia_gpu": {"name": "Tesla T4"}},
-                "workload": {"model_revision": "deadbeef", "backend_version": "0.9.0"},
+                "workload": {"model_revision": "d" * 40, "backend_version": "0.9.0"},
             },
             "metrics": {"ttft_p50_ms": 12.5, "ttft_p95_ms": 21.0,
                         "request_throughput_rps": 8.25, "success_rate": 1.0},
@@ -40,9 +40,21 @@ class EvidenceGateTests(unittest.TestCase):
                 "target_model": "target", "target_revision": "resolve-before-run",
                 "draft_models": ["draft-a", "draft-b"],
             }), encoding="utf-8")
-            resolved = resolve_config(source, output, resolver=lambda model: f"sha-{model}")
-            self.assertEqual(resolved["target_revision"], "sha-target")
-            self.assertEqual(resolved["draft_revisions"]["draft-a"], "sha-draft-a")
+            revisions = {"target": "a" * 40, "draft-a": "b" * 40, "draft-b": "c" * 40}
+            resolved = resolve_config(source, output, resolver=lambda model: revisions[model])
+            self.assertEqual(resolved["target_revision"], "a" * 40)
+            self.assertEqual(resolved["draft_revisions"]["draft-a"], "b" * 40)
+            self.assertEqual(unresolved_revisions(resolved), [])
+
+    def test_config_resolver_replaces_moving_branch_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "config.json"
+            source.write_text(json.dumps({
+                "model": "example/model", "model_revision": "main",
+            }), encoding="utf-8")
+            resolved = resolve_config(source, root / "resolved.json", resolver=lambda _: "f" * 40)
+            self.assertEqual(resolved["model_revision"], "f" * 40)
             self.assertEqual(unresolved_revisions(resolved), [])
 
     def test_artifact_audit_accepts_complete_measured_evidence(self):
@@ -56,7 +68,7 @@ class EvidenceGateTests(unittest.TestCase):
                 "metadata": {
                     "source": "measured", "hardware": "Tesla T4",
                     "environment": {"git_commit": "abc", "nvidia_gpu": {"name": "Tesla T4"}},
-                    "workload": {"model_revision": "sha", "backend_version": "1.0"},
+                    "workload": {"model_revision": "d" * 40, "backend_version": "1.0"},
                 },
                 "traces": [{
                     "request_id": "r1", "input_tokens": 8, "output_tokens": 2,
@@ -80,6 +92,23 @@ class EvidenceGateTests(unittest.TestCase):
             self.assertFalse(audit["passed"])
             self.assertTrue(any("unresolved revision" in error for error in audit["errors"]))
             self.assertIn("artifact directory contains no manifest.json", audit["errors"])
+
+    def test_training_audit_requires_frozen_set_predictions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "manifest.json").write_text(json.dumps({
+                "files_sha256": {}, "resolved_config_sha256": "config-sha"
+            }), encoding="utf-8")
+            (root / "run.json").write_text(json.dumps({
+                "source": "training", "model_revision": "d" * 40,
+                "training_dataset_sha256": "train-sha", "selected_training_ids": ["one"],
+                "environment": {"git_commit": "abc", "nvidia_gpu": {"name": "T4"}},
+                "train_metrics": {"train_loss": 1.0},
+            }), encoding="utf-8")
+            audit = audit_artifacts(root)
+            self.assertFalse(audit["passed"])
+            self.assertTrue(any("evaluation dataset hash" in error for error in audit["errors"]))
+            self.assertTrue(any("raw evaluation predictions" in error for error in audit["errors"]))
 
     def test_manifest_rejects_unresolved_config(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -122,7 +151,7 @@ class EvidenceGateTests(unittest.TestCase):
             self.assertIn("Batching improved throughput.", report)
             self.assertIn("12.5", report)
             self.assertIn("8.25", report)
-            self.assertIn("example/model @ deadbeef", report)
+            self.assertIn("example/model @ " + "d" * 40, report)
             self.assertIn("[run.json]", report)
             self.assertIn("Measured on one T4", report)
 

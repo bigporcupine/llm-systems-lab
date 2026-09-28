@@ -41,6 +41,8 @@ python -m llm_systems_lab experiment-006-speculative \
   --speculative-metrics-url http://127.0.0.1:8001/metrics \
   --model Qwen/Qwen3-1.7B \
   --target-revision "$TARGET_REVISION" \
+  --draft-model Qwen/Qwen3-0.6B \
+  --draft-revision "$DRAFT_REVISION" \
   --baseline-backend-version "$BASELINE_BACKEND_VERSION" \
   --speculative-backend-version "$SPECULATIVE_BACKEND_VERSION" \
   --speculative-config "$SPECULATIVE_CONFIG_JSON" \
@@ -48,3 +50,5 @@ python -m llm_systems_lab experiment-006-speculative \
   --output-tokens 256 --concurrency 1 --measured-requests 30 \
   --repetitions 3 --output-dir artifacts/exp006/draft-qwen3-0.6b
 ```
+
+The artifact records both immutable model revisions, the exact speculative configuration, raw Prometheus text before and after each endpoint workload, and the parsed counter deltas.

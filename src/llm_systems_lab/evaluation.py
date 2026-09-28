@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from .environment import capture_environment
+from .config_resolution import require_immutable_revision
 from .online import stream_request
 from .quality import load_jsonl, score_predictions
 
@@ -19,6 +20,7 @@ def evaluate_endpoint(
     max_tokens: int = 128,
     timeout_seconds: float = 120.0,
 ) -> Dict[str, Any]:
+    require_immutable_revision(model_revision)
     dataset = load_jsonl(dataset_path)
     output_dir.mkdir(parents=True, exist_ok=True)
     predictions: Dict[str, str] = {}

@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .environment import capture_environment
+from .config_resolution import require_immutable_revision
 from .experiment002 import _aggregate
+from .gpu_telemetry import GpuTelemetrySampler
 from .metrics import summarize
 from .models import BenchmarkMetadata, BenchmarkResult
 from .online import run_online_benchmark
@@ -36,9 +38,13 @@ def run_endpoint_matrix(
     """Measure arbitrary input/concurrency cells using one protocol and schema."""
     if repetitions <= 0 or measured_requests <= 0:
         raise ValueError("repetitions and measured_requests must be positive")
+    require_immutable_revision(model_revision)
+    if not backend_version.strip() or backend_version.strip().lower() == "unknown":
+        raise ValueError("backend_version must identify the measured serving engine")
     output_dir.mkdir(parents=True, exist_ok=True)
     environment = capture_environment()
     completed = []
+    telemetry = GpuTelemetrySampler(output_dir / "gpu-telemetry.json").start()
     for cell in cells:
         input_hint = int(cell["input_size_hint"])
         concurrency = int(cell["concurrency"])
@@ -78,11 +84,15 @@ def run_endpoint_matrix(
             results.append(result)
             write_json(result, output_dir / f"input-{input_hint}_c-{concurrency}_run-{repetition + 1}.json")
         completed.append({**cell, "aggregate": _aggregate(results)})
+    telemetry_artifact = telemetry.stop()
     summary = {
         "schema_version": "1.0", "experiment": experiment_id,
         "variant": variant, "model": model, "model_revision": model_revision,
         "precision": precision, "backend_version": backend_version,
         "environment": environment, "cells": completed,
+        "gpu_telemetry": {"path": "gpu-telemetry.json",
+                          "available": telemetry_artifact["available"],
+                          "sample_count": telemetry_artifact["sample_count"]},
     }
     (output_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .environment import capture_environment
+from .config_resolution import require_immutable_revision
 from .gpu_memory import MemorySampler, nvidia_used_memory_mb, theoretical_kv_bytes
 from .online import run_prompt_benchmark
 from .workloads import deterministic_prompt
@@ -26,6 +27,7 @@ def run_kv_memory_experiment(
     output_dir: Path,
     seed: int = 7,
 ) -> Dict[str, Any]:
+    require_immutable_revision(model_revision)
     output_dir.mkdir(parents=True, exist_ok=True)
     idle_mb = nvidia_used_memory_mb()
     cells = []

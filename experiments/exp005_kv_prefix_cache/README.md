@@ -43,6 +43,8 @@ Launch two otherwise identical servers with prefix caching disabled and enabled,
 python -m llm_systems_lab experiment-005-prefix-cache \
   --disabled-url http://127.0.0.1:8000/v1 \
   --enabled-url http://127.0.0.1:8001/v1 \
+  --disabled-metrics-url http://127.0.0.1:8000/metrics \
+  --enabled-metrics-url http://127.0.0.1:8001/metrics \
   --model Qwen/Qwen3-1.7B \
   --model-revision "$MODEL_REVISION" --backend-version "$BACKEND_VERSION" \
   --prefix-lengths 0 128 512 1024 2048 \
@@ -51,6 +53,6 @@ python -m llm_systems_lab experiment-005-prefix-cache \
   --output-dir artifacts/exp005/vllm
 ```
 
-The runner creates byte-identical shared prefixes, unique suffixes, request-level traces, policy-level aggregates, and one break-even result per prefix length.
+The runner creates byte-identical shared prefixes, unique suffixes, request-level traces, policy-level aggregates, and one break-even result per prefix length. When metrics endpoints are supplied, it also preserves the raw Prometheus text before and after every repetition plus counter deltas. Cache-hit metric names are engine/version specific, so the report must state which exported counters were used.
 
 Results belong in `artifacts/exp005/<engine>/<policy>/` with raw traces and engine metrics snapshots.

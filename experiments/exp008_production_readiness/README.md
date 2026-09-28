@@ -40,7 +40,10 @@ python -m llm_systems_lab experiment-008-load \
   --backend-version "$BACKEND_VERSION" --gateway-version "$GATEWAY_VERSION" \
   --requests 100 --concurrency 32 \
   --input-tokens 512 --output-tokens 128 \
-  --hourly-cost-usd 1.00 --peak-rps 10 --target-utilization 0.70 \
+  --ttft-slo-ms 1000 --e2e-slo-ms 15000 \
+  --hourly-cost-usd 1.00 \
+  --price-source "Provider pricing page or invoice URL" --price-date 2026-09-27 \
+  --peak-rps 10 --target-utilization 0.70 \
   --output-dir artifacts/exp008/overload-c32
 ```
 

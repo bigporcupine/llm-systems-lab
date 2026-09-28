@@ -1,4 +1,5 @@
 import json
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -34,6 +35,18 @@ class RepositoryContractTests(unittest.TestCase):
         )
         for command in commands:
             self.assertIn(f'"{command}"', cli)
+
+    def test_backend_launchers_are_shell_syntax_valid(self):
+        required = (
+            "start_vllm_variant.sh", "start_vllm_speculative.sh",
+            "start_vllm_lora.sh", "start_llamacpp_backend.sh",
+            "start_tensorrt_llm_backend.sh",
+        )
+        for name in required:
+            with self.subTest(name=name):
+                path = ROOT / "scripts" / name
+                self.assertTrue(path.is_file())
+                subprocess.run(["bash", "-n", str(path)], check=True)
 
 
 if __name__ == "__main__":

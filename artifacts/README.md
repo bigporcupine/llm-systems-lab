@@ -2,7 +2,7 @@
 
 Formal hardware results are committed below this directory by experiment number. Each experiment root must contain:
 
-- `resolved-config.json` with immutable model revisions;
+- `resolved-config.json` with full 40-character Hugging Face commit SHAs;
 - `manifest.json` created before the run;
 - request-level JSON traces and derived summaries;
 - server logs and engine-metric snapshots needed to explain failures;

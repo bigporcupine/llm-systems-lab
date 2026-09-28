@@ -22,7 +22,7 @@ class Experiment002IntegrationTests(unittest.TestCase):
                 root = Path(directory)
                 config = {
                     "model": "controlled-mock",
-                    "model_revision": "test-revision",
+                    "model_revision": "d" * 40,
                     "dtype": "float16",
                     "input_size_hints": [8],
                     "output_tokens": 3,

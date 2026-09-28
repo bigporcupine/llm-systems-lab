@@ -105,6 +105,32 @@ def _audit_training(value: Dict[str, Any], location: str) -> List[str]:
         errors.append(f"{location}: training artifact missing selected example IDs")
     if not value.get("train_metrics"):
         errors.append(f"{location}: training artifact missing raw trainer metrics")
+    if not value.get("evaluation_dataset_sha256"):
+        errors.append(f"{location}: training artifact missing evaluation dataset hash")
+    if not value.get("evaluation_ids"):
+        errors.append(f"{location}: training artifact missing evaluation example IDs")
+    if not value.get("predictions"):
+        errors.append(f"{location}: training artifact missing raw evaluation predictions")
+    if not value.get("evaluation_scores"):
+        errors.append(f"{location}: training artifact missing evaluation scores")
+    return errors
+
+
+def _audit_derived(value: Dict[str, Any], location: str) -> List[str]:
+    errors = []
+    environment = value.get("environment") or {}
+    if not environment.get("git_commit"):
+        errors.append(f"{location}: derived artifact missing Git commit")
+    if not environment.get("nvidia_gpu") and value.get("hardware") != "cpu":
+        errors.append(f"{location}: derived artifact missing accelerator metadata")
+    if not (value.get("model_revision") or value.get("target_revision")):
+        errors.append(f"{location}: derived artifact missing immutable model revision")
+    if value.get("draft_model") and not value.get("draft_revision"):
+        errors.append(f"{location}: derived artifact missing immutable draft revision")
+    if not (value.get("backend_version") or value.get("baseline_backend_version")):
+        errors.append(f"{location}: derived artifact missing backend version")
+    if not value.get("cells"):
+        errors.append(f"{location}: derived artifact contains no aggregate cells")
     return errors
 
 
@@ -138,6 +164,8 @@ def audit_artifacts(root: Path, output: Path = None) -> Dict[str, Any]:
         elif isinstance(value, dict) and value.get("source") == "training":
             training_count += 1
             errors.extend(_audit_training(value, relative))
+        elif isinstance(value, dict) and value.get("source") == "derived-from-measured":
+            errors.extend(_audit_derived(value, relative))
         files.append({"path": relative, "sha256": sha256_file(path)})
     if not json_files:
         errors.append("artifact directory contains no JSON files")

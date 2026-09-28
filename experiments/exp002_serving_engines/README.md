@@ -310,7 +310,7 @@ A publishable result must include:
 - The client currently uses closed-loop concurrency; open-loop request-rate testing comes later.
 - The input setting is a deterministic word-count hint. Actual input tokens come from server-reported usage and must be inspected for equality across backends.
 - Generic SSE content-event spacing is retained for diagnostics, but it is not assumed to be exact token-level ITL. TPOT is estimated from observed generation span and server-reported output-token count.
-- GPU utilization and power sampling are not implemented yet.
+- GPU utilization, memory, temperature, and power are sampled from `nvidia-smi` during each matrix and preserved as `gpu-telemetry.json`. Unsupported fields remain `null`; they are never imputed.
 - The Transformers baseline is intentionally batch-one and does not represent Text Generation Inference or another optimized Hugging Face server.
 - SGLang is not included in Part A.
 

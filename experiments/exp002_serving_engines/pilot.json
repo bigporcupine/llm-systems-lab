@@ -1,6 +1,6 @@
 {
   "model": "Qwen/Qwen3-0.6B",
-  "model_revision": "RESOLVE_IN_COLAB_BEFORE_RUNNING",
+  "model_revision": "resolve-before-run",
   "dtype": "float16",
   "input_size_hints": [128],
   "output_tokens": 64,
@@ -8,6 +8,7 @@
   "warmup_requests": 2,
   "measured_requests": 20,
   "repetitions": 1,
+  "gpu_telemetry_interval_seconds": 1.0,
   "ttft_slo_ms": 1000,
   "e2e_slo_ms": 10000,
   "timeout_seconds": 120,
