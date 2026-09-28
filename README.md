@@ -117,7 +117,7 @@ python -m llm_systems_lab create-manifest \
 
 The manifest records SHA-256 hashes for the experiment definition, repository commit, runtime, and detected accelerator. Resolve moving model names to immutable revisions before creating it.
 
-See the complete [evidence workflow](EVIDENCE.md) for config resolution, manifests, artifact auditing, and report publication gates.
+See the complete [evidence workflow](EVIDENCE.md) for config resolution, manifests, artifact auditing, and audit-gated versioned report generation. Published reports live under [`reports/`](reports/README.md).
 
 ## Contributing
 

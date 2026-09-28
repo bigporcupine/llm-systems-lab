@@ -225,6 +225,18 @@ def _parser() -> argparse.ArgumentParser:
     )
     audit.add_argument("--artifact-dir", type=Path, required=True)
     audit.add_argument("--output", type=Path, required=True)
+
+    report = commands.add_parser(
+        "build-report", help="Build a versioned Markdown report from audited artifacts."
+    )
+    report.add_argument("--artifact-dir", type=Path, required=True)
+    report.add_argument("--audit", type=Path, required=True)
+    report.add_argument("--title", required=True)
+    report.add_argument("--version", required=True)
+    report.add_argument("--claim", required=True)
+    report.add_argument("--limitations-file", type=Path, required=True)
+    report.add_argument("--decision", default="Pending review against the stated quality and SLO guardrails.")
+    report.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -475,6 +487,15 @@ def main(argv: Optional[List[str]] = None) -> int:
         result = audit_artifacts(args.artifact_dir, args.output)
         print(json.dumps(result, indent=2))
         return 0 if result["passed"] else 1
+    if args.command == "build-report":
+        from .report_builder import build_report
+
+        build_report(
+            args.artifact_dir, args.audit, args.title, args.version,
+            args.claim, args.limitations_file, args.output, args.decision,
+        )
+        print(f"Wrote audited report to {args.output}")
+        return 0
     raise SystemExit(f"Unknown command: {args.command}")
 
 

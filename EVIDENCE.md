@@ -40,6 +40,20 @@ python -m llm_systems_lab audit-artifacts \
 
 The command exits non-zero when evidence is missing. It rejects unresolved revision placeholders, synthetic data presented as measured, successful requests without TTFT, missing raw traces, missing Git/accelerator/backend/model metadata, and missing resolved-config manifests.
 
-## 5. Write the versioned report
+## 5. Build the versioned report
 
-Copy `REPORT_TEMPLATE.md`, link each table to audited artifacts, include failed cells and limitations, and state only the narrow claim supported by that model revision, engine version, hardware, and workload. Commit artifacts and report together so links remain stable.
+Write an English limitations file before generating the report. Then use the passing audit as a publication gate:
+
+```bash
+python -m llm_systems_lab build-report \
+  --artifact-dir artifacts/exp003 \
+  --audit artifacts/exp003/audit.json \
+  --title "Experiment 003 — Batching and Saturation" \
+  --version v1.0.0 \
+  --claim "State the narrow, falsifiable conclusion supported by this run." \
+  --limitations-file artifacts/exp003/limitations.md \
+  --decision "Record the selected configuration and its guardrails." \
+  --output reports/exp003-v1.0.0.md
+```
+
+The builder refuses failed or stale audits, changed artifact hashes, new unaudited JSON files, empty limitations, and malformed report versions. It extracts benchmark values directly from audited JSON and links every result row to its raw artifact. It never fabricates missing measurements. Commit the artifacts, audit, limitations, and versioned report together so the evidence links remain stable.
