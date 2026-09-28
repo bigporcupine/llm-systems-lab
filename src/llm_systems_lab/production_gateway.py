@@ -7,6 +7,7 @@ import logging
 import time
 import uuid
 from collections import Counter, defaultdict
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict
 
@@ -19,7 +20,7 @@ LOGGER = logging.getLogger("llm-systems-gateway")
 class GatewayState:
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.slots = asyncio.Semaphore(int(config["max_in_flight"]))
+        self.slots = None
         self.counters = Counter()
         self.latencies = defaultdict(list)
         self.in_flight = 0
@@ -49,9 +50,21 @@ def create_app(config: Dict[str, Any]):
     except ImportError as exc:
         raise RuntimeError("Install the production optional dependencies") from exc
 
-    app = FastAPI(title="LLM Systems Lab Gateway")
     state = GatewayState(config)
-    client = httpx.AsyncClient(timeout=float(config["request_timeout_seconds"]))
+    resources: Dict[str, Any] = {}
+
+    @asynccontextmanager
+    async def lifespan(_app):
+        state.slots = asyncio.Semaphore(int(config["max_in_flight"]))
+        resources["client"] = httpx.AsyncClient(
+            timeout=float(config["request_timeout_seconds"])
+        )
+        try:
+            yield
+        finally:
+            await resources["client"].aclose()
+
+    app = FastAPI(title="LLM Systems Lab Gateway", lifespan=lifespan)
 
     @app.get("/health")
     async def health():
@@ -77,6 +90,7 @@ def create_app(config: Dict[str, Any]):
         body = await request.body()
         upstream = None
         try:
+            client = resources["client"]
             upstream_request = client.build_request("POST", f"{base_url}/chat/completions", content=body, headers={"content-type": "application/json", "x-request-id": request_id})
             upstream = await client.send(upstream_request, stream=True)
         except httpx.TimeoutException:
@@ -105,10 +119,6 @@ def create_app(config: Dict[str, Any]):
                 LOGGER.info("request_complete request_id=%s lane=%s status=%s elapsed_ms=%.3f", request_id, lane, status, elapsed)
 
         return StreamingResponse(relay(), status_code=upstream.status_code, media_type=upstream.headers.get("content-type", "text/event-stream"), headers={"x-request-id": request_id, "x-model-lane": lane})
-
-    @app.on_event("shutdown")
-    async def shutdown():
-        await client.aclose()
 
     return app
 

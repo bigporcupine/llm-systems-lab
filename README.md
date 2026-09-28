@@ -46,6 +46,7 @@ Python 3.9 or newer is required.
 
 ```bash
 python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip setuptools wheel
 .venv/bin/python -m pip install -e .
 .venv/bin/llms-lab benchmark --requests 50
 ```
