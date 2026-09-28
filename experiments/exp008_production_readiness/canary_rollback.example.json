@@ -1,0 +1,4 @@
+[
+  {"requests": 100, "error_rate": 0.006, "p95_latency_ms": 810, "quality": 0.90},
+  {"requests": 200, "error_rate": 0.04, "p95_latency_ms": 820, "quality": 0.90}
+]

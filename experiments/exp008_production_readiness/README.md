@@ -29,3 +29,33 @@ python -m llm_systems_lab production-gateway \
 ```
 
 Then point the shared online benchmark at `http://127.0.0.1:9000/v1` and preserve raw gateway metrics before and after the overload and canary tests.
+
+Capture the gateway load, Prometheus snapshots, request traces, capacity plan, and output-token unit cost with:
+
+```bash
+python -m llm_systems_lab experiment-008-load \
+  --base-url http://127.0.0.1:9000/v1 \
+  --metrics-url http://127.0.0.1:9000/metrics \
+  --model Qwen/Qwen3-1.7B --requests 100 --concurrency 32 \
+  --input-tokens 512 --output-tokens 128 \
+  --hourly-cost-usd 1.00 --peak-rps 10 --target-utilization 0.70 \
+  --output-dir artifacts/exp008/overload-c32
+```
+
+The checked-in example windows exercise both state-machine outcomes without claiming measured performance:
+
+```bash
+python -m llm_systems_lab analyze-canary \
+  --stable experiments/exp008_production_readiness/stable.example.json \
+  --canary-windows experiments/exp008_production_readiness/canary_promotion.example.json \
+  --config experiments/exp008_production_readiness/config.json \
+  --output artifacts/exp008/promotion.json
+
+python -m llm_systems_lab analyze-canary \
+  --stable experiments/exp008_production_readiness/stable.example.json \
+  --canary-windows experiments/exp008_production_readiness/canary_rollback.example.json \
+  --config experiments/exp008_production_readiness/config.json \
+  --output artifacts/exp008/rollback.json
+```
+
+Replace the example inputs with measured stable and canary windows for the formal report.

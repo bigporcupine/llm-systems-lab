@@ -1,0 +1,6 @@
+{
+  "requests": 1000,
+  "error_rate": 0.005,
+  "p95_latency_ms": 800,
+  "quality": 0.90
+}

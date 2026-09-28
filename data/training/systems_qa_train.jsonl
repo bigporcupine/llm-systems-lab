@@ -1,0 +1,12 @@
+{"id":"train-ttft-1","prompt":"In an LLM streaming benchmark, explain time to first token.","references":["Time to first token is the elapsed time between request submission and receipt of the first generated token."]}
+{"id":"train-tpot-1","prompt":"Explain time per output token in one sentence.","references":["Time per output token measures average decode time for generated tokens after the first token."]}
+{"id":"train-goodput-1","prompt":"How is goodput different from raw throughput?","references":["Goodput counts only successful requests that meet the specified latency and correctness objectives."]}
+{"id":"train-kv-1","prompt":"Why does KV-cache memory increase with context length?","references":["The model stores attention keys and values for each cached token across its layers."]}
+{"id":"train-batch-1","prompt":"Describe continuous batching for autoregressive inference.","references":["Continuous batching adds and removes active sequences at token boundaries to keep accelerator batches full."]}
+{"id":"train-tail-1","prompt":"What does tail latency reveal in online inference?","references":["Tail latency reveals slow requests and queueing behavior hidden by average latency."]}
+{"id":"train-quant-1","prompt":"What evidence is needed before deploying a quantized model?","references":["Measure memory and speed improvements and verify quality regression against an explicit acceptance threshold."]}
+{"id":"train-warmup-1","prompt":"List one-time effects removed by inference warm-up.","references":["Warm-up removes effects such as model initialization, kernel compilation, cache population, and graph capture."]}
+{"id":"train-prefix-1","prompt":"Why can a shared-prefix cache save prefill work?","references":["It reuses cached attention state for a byte-identical prefix instead of recomputing that prefix."]}
+{"id":"train-spec-1","prompt":"When is speculative decoding likely to be beneficial?","references":["It is beneficial when draft-token acceptance is high enough to offset drafting and target verification overhead."]}
+{"id":"train-canary-1","prompt":"How does a canary reduce model rollout risk?","references":["It sends a small deterministic traffic fraction to the candidate and rolls back when guardrails regress."]}
+{"id":"train-overload-1","prompt":"What is the purpose of admission control in model serving?","references":["Admission control rejects excess work before queues grow enough to violate latency objectives for admitted requests."]}

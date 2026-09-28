@@ -4,7 +4,7 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional, Sequence
 from urllib import error, request
 
 from .models import RequestTrace
@@ -33,6 +33,7 @@ def stream_request(
     controlled_mock: bool = False,
     prompt: str = "",
     force_output_length: bool = False,
+    extra_headers: Optional[dict] = None,
 ) -> RequestTrace:
     """Measure one streamed request using a monotonic high-resolution clock."""
     payload = {
@@ -53,16 +54,19 @@ def stream_request(
         payload.update(
             {"mock_request_id": request_id, "mock_input_tokens": input_tokens}
         )
+    headers = {"Content-Type": "application/json"}
+    headers.update(extra_headers or {})
     http_request = request.Request(
         _completion_url(base_url),
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     started = time.perf_counter()
     timestamps: List[float] = []
     reported_input_tokens = 0
     reported_output_tokens = 0
+    completion_parts: List[str] = []
     try:
         with request.urlopen(http_request, timeout=timeout_seconds) as response:
             for raw_line in response:
@@ -81,6 +85,7 @@ def stream_request(
                 choices = event.get("choices") or []
                 content = (choices[0].get("delta") or {}).get("content") if choices else None
                 if content:
+                    completion_parts.append(content)
                     timestamps.append((time.perf_counter() - started) * 1000.0)
         total_ms = (time.perf_counter() - started) * 1000.0
         return RequestTrace(
@@ -92,6 +97,7 @@ def stream_request(
             token_timestamps_ms=[round(value, 3) for value in timestamps],
             succeeded=bool(timestamps),
             error=None if timestamps else "stream completed without content",
+            completion_text="".join(completion_parts),
         )
     except (error.URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError) as exc:
         total_ms = (time.perf_counter() - started) * 1000.0
@@ -103,6 +109,7 @@ def stream_request(
             first_token_latency_ms=None,
             succeeded=False,
             error=f"{type(exc).__name__}: {exc}",
+            completion_text=None,
         )
 
 
@@ -136,6 +143,35 @@ def run_online_benchmark(
                 force_output_length,
             )
             for index in range(requests)
+        ]
+        traces = [future.result() for future in as_completed(futures)]
+    wall_time_ms = (time.perf_counter() - started) * 1000.0
+    traces.sort(key=lambda trace: trace.request_id)
+    return OnlineRun(traces=traces, wall_time_ms=round(wall_time_ms, 3))
+
+
+def run_prompt_benchmark(
+    base_url: str,
+    model: str,
+    prompts: Sequence[str],
+    concurrency: int,
+    output_tokens: int,
+    timeout_seconds: float = 30.0,
+    request_id_prefix: str = "request",
+    force_output_length: bool = False,
+) -> OnlineRun:
+    """Run distinct deterministic prompts while preserving one trace per prompt."""
+    if not prompts or concurrency <= 0:
+        raise ValueError("prompts must not be empty and concurrency must be positive")
+    started = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        futures = [
+            executor.submit(
+                stream_request, base_url, model, f"{request_id_prefix}-{index:05d}",
+                0, output_tokens, timeout_seconds, False, prompt,
+                force_output_length,
+            )
+            for index, prompt in enumerate(prompts)
         ]
         traces = [future.result() for future in as_completed(futures)]
     wall_time_ms = (time.perf_counter() - started) * 1000.0

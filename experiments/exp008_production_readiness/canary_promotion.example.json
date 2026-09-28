@@ -1,0 +1,7 @@
+[
+  {"requests": 100, "error_rate": 0.006, "p95_latency_ms": 810, "quality": 0.90},
+  {"requests": 200, "error_rate": 0.005, "p95_latency_ms": 805, "quality": 0.91},
+  {"requests": 500, "error_rate": 0.004, "p95_latency_ms": 795, "quality": 0.91},
+  {"requests": 1000, "error_rate": 0.005, "p95_latency_ms": 800, "quality": 0.91},
+  {"requests": 2000, "error_rate": 0.005, "p95_latency_ms": 798, "quality": 0.91}
+]

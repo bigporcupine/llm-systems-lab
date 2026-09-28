@@ -102,6 +102,16 @@ A real benchmark report must state:
 
 Results from different hardware or workloads are not treated as directly comparable merely because they use the same model.
 
+Before a measured run, create an immutable manifest beside its artifacts:
+
+```bash
+python -m llm_systems_lab create-manifest \
+  --experiment-dir experiments/exp003_batching_saturation \
+  --output artifacts/exp003/manifest.json
+```
+
+The manifest records SHA-256 hashes for the experiment definition, repository commit, runtime, and detected accelerator. Resolve moving model names to immutable revisions before creating it.
+
 ## Contributing
 
 Contributions should add evidence, not just another integration. A useful experiment includes a falsifiable hypothesis, controlled variables, raw traces, repeatable commands, analysis of failed or surprising cases, and a precise statement of limitations.

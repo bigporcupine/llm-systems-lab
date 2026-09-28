@@ -26,3 +26,21 @@ bash scripts/profiling/nsys_capture.sh \
 ```
 
 The conclusion must state the observed break-even acceptance rate; it must not generalize one draft/target pair to all models.
+
+## Run the endpoint comparison
+
+Launch target-only and speculative servers on separate ports. If the engines export Prometheus metrics, include both metrics URLs so proposed and accepted token counters are snapshotted around the workload.
+
+Use `scripts/start_vllm_speculative.sh` for the candidate. Its speculative configuration is passed as an explicit JSON argument because the accepted keys are version-specific; preserve that exact JSON and the vLLM version in the result manifest.
+
+```bash
+python -m llm_systems_lab experiment-006-speculative \
+  --baseline-url http://127.0.0.1:8000/v1 \
+  --speculative-url http://127.0.0.1:8001/v1 \
+  --baseline-metrics-url http://127.0.0.1:8000/metrics \
+  --speculative-metrics-url http://127.0.0.1:8001/metrics \
+  --model Qwen/Qwen3-1.7B \
+  --input-size-hints 128 1024 \
+  --output-tokens 256 --concurrency 1 --measured-requests 30 \
+  --repetitions 3 --output-dir artifacts/exp006/draft-qwen3-0.6b
+```

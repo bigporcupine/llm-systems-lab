@@ -104,12 +104,101 @@ def _parser() -> argparse.ArgumentParser:
     quality.add_argument("--predictions", type=Path, required=True)
     quality.add_argument("--output", type=Path, required=True)
 
+    evaluate = commands.add_parser(
+        "evaluate-endpoint", help="Generate and score deterministic endpoint predictions."
+    )
+    evaluate.add_argument("--base-url", required=True)
+    evaluate.add_argument("--model", required=True)
+    evaluate.add_argument("--dataset", type=Path, required=True)
+    evaluate.add_argument("--output-dir", type=Path, required=True)
+    evaluate.add_argument("--max-tokens", type=int, default=128)
+    evaluate.add_argument("--timeout-seconds", type=float, default=120.0)
+
+    cache = commands.add_parser(
+        "experiment-005-prefix-cache", help="Measure prefix-cache break-even."
+    )
+    cache.add_argument("--disabled-url", required=True)
+    cache.add_argument("--enabled-url", required=True)
+    cache.add_argument("--model", required=True)
+    cache.add_argument("--prefix-lengths", type=int, nargs="+", required=True)
+    cache.add_argument("--reuse-counts", type=int, nargs="+", required=True)
+    cache.add_argument("--output-tokens", type=int, default=64)
+    cache.add_argument("--concurrency", type=int, default=8)
+    cache.add_argument("--repetitions", type=int, default=3)
+    cache.add_argument("--timeout-seconds", type=float, default=180.0)
+    cache.add_argument("--output-dir", type=Path, required=True)
+
+    kv_memory = commands.add_parser(
+        "experiment-005-kv-memory", help="Measure peak GPU memory across KV-cache workloads."
+    )
+    kv_memory.add_argument("--base-url", required=True)
+    kv_memory.add_argument("--model", required=True)
+    kv_memory.add_argument("--sequence-lengths", type=int, nargs="+", required=True)
+    kv_memory.add_argument("--concurrency", type=int, nargs="+", required=True)
+    kv_memory.add_argument("--output-tokens", type=int, default=64)
+    kv_memory.add_argument("--timeout-seconds", type=float, default=180.0)
+    kv_memory.add_argument("--layers", type=int, required=True)
+    kv_memory.add_argument("--kv-heads", type=int, required=True)
+    kv_memory.add_argument("--head-dim", type=int, required=True)
+    kv_memory.add_argument("--bytes-per-element", type=int, default=2)
+    kv_memory.add_argument("--output-dir", type=Path, required=True)
+
+    speculative = commands.add_parser(
+        "experiment-006-speculative", help="Compare target-only and speculative endpoints."
+    )
+    speculative.add_argument("--baseline-url", required=True)
+    speculative.add_argument("--speculative-url", required=True)
+    speculative.add_argument("--baseline-metrics-url")
+    speculative.add_argument("--speculative-metrics-url")
+    speculative.add_argument("--model", required=True)
+    speculative.add_argument(
+        "--workloads", nargs="+",
+        default=["high-agreement", "general", "adversarial-low-agreement"],
+    )
+    speculative.add_argument("--input-size-hints", type=int, nargs="+", required=True)
+    speculative.add_argument("--output-tokens", type=int, default=256)
+    speculative.add_argument("--concurrency", type=int, default=1)
+    speculative.add_argument("--measured-requests", type=int, default=30)
+    speculative.add_argument("--repetitions", type=int, default=3)
+    speculative.add_argument("--timeout-seconds", type=float, default=240.0)
+    speculative.add_argument("--output-dir", type=Path, required=True)
+
     gateway = commands.add_parser(
         "production-gateway", help="Run the overload-safe canary gateway."
     )
     gateway.add_argument("--config", type=Path, required=True)
     gateway.add_argument("--host", default="127.0.0.1")
     gateway.add_argument("--port", type=int, default=9000)
+
+    production_load = commands.add_parser(
+        "experiment-008-load", help="Load the production gateway and capture metrics/capacity."
+    )
+    production_load.add_argument("--base-url", required=True)
+    production_load.add_argument("--metrics-url", required=True)
+    production_load.add_argument("--model", required=True)
+    production_load.add_argument("--requests", type=int, default=100)
+    production_load.add_argument("--concurrency", type=int, default=16)
+    production_load.add_argument("--input-tokens", type=int, default=512)
+    production_load.add_argument("--output-tokens", type=int, default=128)
+    production_load.add_argument("--timeout-seconds", type=float, default=60.0)
+    production_load.add_argument("--hourly-cost-usd", type=float, required=True)
+    production_load.add_argument("--peak-rps", type=float, required=True)
+    production_load.add_argument("--target-utilization", type=float, default=0.7)
+    production_load.add_argument("--output-dir", type=Path, required=True)
+
+    canary = commands.add_parser(
+        "analyze-canary", help="Evaluate staged canary promotion and rollback guardrails."
+    )
+    canary.add_argument("--stable", type=Path, required=True)
+    canary.add_argument("--canary-windows", type=Path, required=True)
+    canary.add_argument("--config", type=Path, required=True)
+    canary.add_argument("--output", type=Path, required=True)
+
+    manifest = commands.add_parser(
+        "create-manifest", help="Hash an experiment definition before a measured run."
+    )
+    manifest.add_argument("--experiment-dir", type=Path, required=True)
+    manifest.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -276,10 +365,70 @@ def main(argv: Optional[List[str]] = None) -> int:
         return _run_matrix(args)
     if args.command == "score-quality":
         return _score_quality(args)
+    if args.command == "evaluate-endpoint":
+        from .evaluation import evaluate_endpoint
+
+        evaluate_endpoint(
+            args.base_url, args.model, args.dataset, args.output_dir,
+            args.max_tokens, args.timeout_seconds,
+        )
+        return 0
+    if args.command == "experiment-005-prefix-cache":
+        from .cache_experiment import run_prefix_cache_experiment
+
+        run_prefix_cache_experiment(
+            args.disabled_url, args.enabled_url, args.model,
+            args.prefix_lengths, args.reuse_counts, args.output_tokens,
+            args.concurrency, args.repetitions, args.timeout_seconds,
+            args.output_dir,
+        )
+        return 0
+    if args.command == "experiment-005-kv-memory":
+        from .kv_experiment import run_kv_memory_experiment
+
+        run_kv_memory_experiment(
+            args.base_url, args.model, args.sequence_lengths,
+            args.concurrency, args.output_tokens, args.timeout_seconds,
+            args.layers, args.kv_heads, args.head_dim,
+            args.bytes_per_element, args.output_dir,
+        )
+        return 0
+    if args.command == "experiment-006-speculative":
+        from .speculative_experiment import run_speculative_comparison
+
+        run_speculative_comparison(
+            args.baseline_url, args.speculative_url, args.model, args.workloads,
+            args.input_size_hints, args.output_tokens, args.concurrency,
+            args.measured_requests, args.repetitions, args.timeout_seconds,
+            args.output_dir, args.baseline_metrics_url,
+            args.speculative_metrics_url,
+        )
+        return 0
     if args.command == "production-gateway":
         from .production_gateway import serve
 
         serve(args.config, args.host, args.port)
+        return 0
+    if args.command == "experiment-008-load":
+        from .production_experiment import run_gateway_load
+
+        run_gateway_load(
+            args.base_url, args.metrics_url, args.model, args.requests,
+            args.concurrency, args.input_tokens, args.output_tokens,
+            args.timeout_seconds, args.hourly_cost_usd, args.peak_rps,
+            args.target_utilization, args.output_dir,
+        )
+        return 0
+    if args.command == "analyze-canary":
+        from .production_experiment import analyze_canary
+
+        policy_config = json.loads(args.config.read_text(encoding="utf-8"))["rollback"]
+        analyze_canary(args.stable, args.canary_windows, policy_config, args.output)
+        return 0
+    if args.command == "create-manifest":
+        from .manifest import create_manifest
+
+        create_manifest(args.experiment_dir, args.output)
         return 0
     raise SystemExit(f"Unknown command: {args.command}")
 

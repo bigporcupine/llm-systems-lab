@@ -6,6 +6,9 @@ import json
 import random
 from pathlib import Path
 
+from llm_systems_lab.environment import capture_environment
+from llm_systems_lab.manifest import sha256_file
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -24,6 +27,12 @@ def main():
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if not 0 < args.dataset_fraction <= 1:
         raise SystemExit("--dataset-fraction must be in (0, 1]")
+    if config["model_revision"] == "resolve-before-run":
+        raise SystemExit("Resolve model_revision to an immutable commit before training")
+    if args.rank not in config["ranks"] or args.learning_rate not in config["learning_rates"]:
+        raise SystemExit("Rank and learning rate must be declared in the experiment config")
+    if args.dataset_fraction not in config["dataset_fractions"] or args.seed not in config["seeds"]:
+        raise SystemExit("Dataset fraction and seed must be declared in the experiment config")
     try:
         import torch
         from datasets import Dataset
@@ -32,7 +41,7 @@ def main():
     except ImportError as exc:
         raise SystemExit("Install the training extra before running Experiment 007") from exc
 
-    rows = [json.loads(line) for line in Path(config["dataset"]).read_text().splitlines() if line.strip()]
+    rows = [json.loads(line) for line in Path(config["training_dataset"]).read_text().splitlines() if line.strip()]
     rng = random.Random(args.seed)
     rng.shuffle(rows)
     rows = rows[: max(1, round(len(rows) * args.dataset_fraction))]
@@ -56,7 +65,7 @@ def main():
     trainer = Trainer(model=model, args=training, train_dataset=dataset, processing_class=tokenizer)
     result = trainer.train()
     trainer.save_model()
-    metadata = {"config": config, "method": args.method, "rank": args.rank, "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction, "seed": args.seed, "train_metrics": result.metrics, "peak_gpu_memory_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None}
+    metadata = {"config": config, "method": args.method, "rank": args.rank, "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction, "seed": args.seed, "training_dataset_sha256": sha256_file(Path(config["training_dataset"])), "selected_training_ids": [row["id"] for row in rows], "environment": capture_environment(), "train_metrics": result.metrics, "peak_gpu_memory_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None}
     (args.output_dir / "run.json").write_text(json.dumps(metadata, indent=2, default=str) + "\n", encoding="utf-8")
 
 

@@ -1,7 +1,8 @@
 {
   "base_model": "Qwen/Qwen3-0.6B",
   "model_revision": "resolve-before-run",
-  "dataset": "data/evaluation/systems_qa.jsonl",
+  "training_dataset": "data/training/systems_qa_train.jsonl",
+  "evaluation_dataset": "data/evaluation/systems_qa.jsonl",
   "methods": ["lora", "qlora-nf4"],
   "ranks": [4, 8, 16, 32],
   "learning_rates": [0.00005, 0.0001, 0.0002],

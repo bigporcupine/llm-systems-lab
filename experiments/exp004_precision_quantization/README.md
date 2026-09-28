@@ -15,7 +15,19 @@ Lower precision is useful only when memory savings or speedups survive a quality
 
 ## Run
 
-Serve one variant at a time and use `experiment-matrix` for performance. Save predictions as `{id: prediction}` and score them with:
+Serve one variant at a time and use `experiment-matrix` for performance. Generate raw predictions and scores directly from the same endpoint with:
+
+`scripts/start_vllm_variant.sh` launches an explicitly pinned model artifact. For example, pass `none` for an FP16/BF16 checkpoint, the engine's supported INT8 method for an INT8 artifact, or `awq` for an AWQ checkpoint. Record the exact model artifact and backend version; changing only the flag does not quantize an FP checkpoint.
+
+```bash
+python -m llm_systems_lab evaluate-endpoint \
+  --base-url http://127.0.0.1:8000/v1 \
+  --model Qwen/Qwen3-1.7B \
+  --dataset data/evaluation/systems_qa.jsonl \
+  --output-dir artifacts/exp004/awq-int4/evaluation
+```
+
+Saved predictions can be rescored without contacting the model:
 
 ```bash
 python -m llm_systems_lab score-quality \

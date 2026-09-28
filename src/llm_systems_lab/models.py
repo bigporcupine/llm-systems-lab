@@ -22,6 +22,7 @@ class RequestTrace:
     token_timestamps_ms: List[float] = field(default_factory=list)
     succeeded: bool = True
     error: Optional[str] = None
+    completion_text: Optional[str] = None
 
     @classmethod
     def from_dict(cls, value: Dict[str, Any]) -> "RequestTrace":
