@@ -36,7 +36,9 @@ Capture the gateway load, Prometheus snapshots, request traces, capacity plan, a
 python -m llm_systems_lab experiment-008-load \
   --base-url http://127.0.0.1:9000/v1 \
   --metrics-url http://127.0.0.1:9000/metrics \
-  --model Qwen/Qwen3-1.7B --requests 100 --concurrency 32 \
+  --model Qwen/Qwen3-1.7B --model-revision "$MODEL_REVISION" \
+  --backend-version "$BACKEND_VERSION" --gateway-version "$GATEWAY_VERSION" \
+  --requests 100 --concurrency 32 \
   --input-tokens 512 --output-tokens 128 \
   --hourly-cost-usd 1.00 --peak-rps 10 --target-utilization 0.70 \
   --output-dir artifacts/exp008/overload-c32

@@ -23,6 +23,8 @@ Serve one variant at a time and use `experiment-matrix` for performance. Generat
 python -m llm_systems_lab evaluate-endpoint \
   --base-url http://127.0.0.1:8000/v1 \
   --model Qwen/Qwen3-1.7B \
+  --model-revision "$MODEL_REVISION" \
+  --backend-version "$BACKEND_VERSION" \
   --dataset data/evaluation/systems_qa.jsonl \
   --output-dir artifacts/exp004/awq-int4/evaluation
 ```

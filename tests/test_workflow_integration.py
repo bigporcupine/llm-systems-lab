@@ -39,7 +39,8 @@ class WorkflowIntegrationTests(unittest.TestCase):
                 encoding="utf-8",
             )
             artifact = evaluate_endpoint(
-                self.first_url, "mock", dataset, root / "out", max_tokens=2
+                self.first_url, "mock", "test-revision", "mock-1.0",
+                dataset, root / "out", max_tokens=2
             )
             self.assertEqual(artifact["scores"]["exact_match"], 1.0)
             self.assertEqual(artifact["predictions"]["one"], "xx")
@@ -50,7 +51,8 @@ class WorkflowIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             artifact = run_prefix_cache_experiment(
-                self.first_url, self.second_url, "mock", [8], [1, 2],
+                self.first_url, self.second_url, "mock", "test-revision",
+                "mock-1.0", [8], [1, 2],
                 output_tokens=2, concurrency=2, repetitions=1,
                 timeout_seconds=10, output_dir=output,
             )
@@ -63,7 +65,9 @@ class WorkflowIntegrationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             artifact = run_speculative_comparison(
-                self.first_url, self.second_url, "mock", ["general"], [8],
+                self.first_url, self.second_url, "mock", "test-revision",
+                "mock-1.0", "mock-1.0", '{"draft":"mock"}',
+                ["general"], [8],
                 output_tokens=2, concurrency=2, measured_requests=2,
                 repetitions=1, timeout_seconds=10, output_dir=output,
             )

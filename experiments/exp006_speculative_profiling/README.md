@@ -40,6 +40,10 @@ python -m llm_systems_lab experiment-006-speculative \
   --baseline-metrics-url http://127.0.0.1:8000/metrics \
   --speculative-metrics-url http://127.0.0.1:8001/metrics \
   --model Qwen/Qwen3-1.7B \
+  --target-revision "$TARGET_REVISION" \
+  --baseline-backend-version "$BASELINE_BACKEND_VERSION" \
+  --speculative-backend-version "$SPECULATIVE_BACKEND_VERSION" \
+  --speculative-config "$SPECULATIVE_CONFIG_JSON" \
   --input-size-hints 128 1024 \
   --output-tokens 256 --concurrency 1 --measured-requests 30 \
   --repetitions 3 --output-dir artifacts/exp006/draft-qwen3-0.6b

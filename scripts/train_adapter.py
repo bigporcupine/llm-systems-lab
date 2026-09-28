@@ -65,7 +65,7 @@ def main():
     trainer = Trainer(model=model, args=training, train_dataset=dataset, processing_class=tokenizer)
     result = trainer.train()
     trainer.save_model()
-    metadata = {"config": config, "method": args.method, "rank": args.rank, "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction, "seed": args.seed, "training_dataset_sha256": sha256_file(Path(config["training_dataset"])), "selected_training_ids": [row["id"] for row in rows], "environment": capture_environment(), "train_metrics": result.metrics, "peak_gpu_memory_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None}
+    metadata = {"schema_version": "1.0", "source": "training", "base_model": config["base_model"], "model_revision": config["model_revision"], "config": config, "method": args.method, "rank": args.rank, "learning_rate": args.learning_rate, "dataset_fraction": args.dataset_fraction, "seed": args.seed, "training_dataset_sha256": sha256_file(Path(config["training_dataset"])), "selected_training_ids": [row["id"] for row in rows], "environment": capture_environment(), "train_metrics": result.metrics, "peak_gpu_memory_bytes": torch.cuda.max_memory_allocated() if torch.cuda.is_available() else None}
     (args.output_dir / "run.json").write_text(json.dumps(metadata, indent=2, default=str) + "\n", encoding="utf-8")
 
 

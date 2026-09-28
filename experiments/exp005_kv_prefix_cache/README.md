@@ -24,6 +24,7 @@ Run the KV-memory sweep while the configured server is otherwise idle. Model dim
 python -m llm_systems_lab experiment-005-kv-memory \
   --base-url http://127.0.0.1:8000/v1 \
   --model Qwen/Qwen3-1.7B \
+  --model-revision "$MODEL_REVISION" --backend-version "$BACKEND_VERSION" \
   --sequence-lengths 128 512 1024 2048 4096 8192 \
   --concurrency 1 4 8 --output-tokens 64 \
   --layers MODEL_LAYERS --kv-heads MODEL_KV_HEADS --head-dim MODEL_HEAD_DIM \
@@ -43,6 +44,7 @@ python -m llm_systems_lab experiment-005-prefix-cache \
   --disabled-url http://127.0.0.1:8000/v1 \
   --enabled-url http://127.0.0.1:8001/v1 \
   --model Qwen/Qwen3-1.7B \
+  --model-revision "$MODEL_REVISION" --backend-version "$BACKEND_VERSION" \
   --prefix-lengths 0 128 512 1024 2048 \
   --reuse-counts 1 2 4 8 16 32 \
   --repetitions 3 \

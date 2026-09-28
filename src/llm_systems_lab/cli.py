@@ -109,6 +109,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument("--base-url", required=True)
     evaluate.add_argument("--model", required=True)
+    evaluate.add_argument("--model-revision", required=True)
+    evaluate.add_argument("--backend-version", required=True)
     evaluate.add_argument("--dataset", type=Path, required=True)
     evaluate.add_argument("--output-dir", type=Path, required=True)
     evaluate.add_argument("--max-tokens", type=int, default=128)
@@ -120,6 +122,8 @@ def _parser() -> argparse.ArgumentParser:
     cache.add_argument("--disabled-url", required=True)
     cache.add_argument("--enabled-url", required=True)
     cache.add_argument("--model", required=True)
+    cache.add_argument("--model-revision", required=True)
+    cache.add_argument("--backend-version", required=True)
     cache.add_argument("--prefix-lengths", type=int, nargs="+", required=True)
     cache.add_argument("--reuse-counts", type=int, nargs="+", required=True)
     cache.add_argument("--output-tokens", type=int, default=64)
@@ -133,6 +137,8 @@ def _parser() -> argparse.ArgumentParser:
     )
     kv_memory.add_argument("--base-url", required=True)
     kv_memory.add_argument("--model", required=True)
+    kv_memory.add_argument("--model-revision", required=True)
+    kv_memory.add_argument("--backend-version", required=True)
     kv_memory.add_argument("--sequence-lengths", type=int, nargs="+", required=True)
     kv_memory.add_argument("--concurrency", type=int, nargs="+", required=True)
     kv_memory.add_argument("--output-tokens", type=int, default=64)
@@ -151,6 +157,10 @@ def _parser() -> argparse.ArgumentParser:
     speculative.add_argument("--baseline-metrics-url")
     speculative.add_argument("--speculative-metrics-url")
     speculative.add_argument("--model", required=True)
+    speculative.add_argument("--target-revision", required=True)
+    speculative.add_argument("--baseline-backend-version", required=True)
+    speculative.add_argument("--speculative-backend-version", required=True)
+    speculative.add_argument("--speculative-config", required=True)
     speculative.add_argument(
         "--workloads", nargs="+",
         default=["high-agreement", "general", "adversarial-low-agreement"],
@@ -176,6 +186,9 @@ def _parser() -> argparse.ArgumentParser:
     production_load.add_argument("--base-url", required=True)
     production_load.add_argument("--metrics-url", required=True)
     production_load.add_argument("--model", required=True)
+    production_load.add_argument("--model-revision", required=True)
+    production_load.add_argument("--backend-version", required=True)
+    production_load.add_argument("--gateway-version", required=True)
     production_load.add_argument("--requests", type=int, default=100)
     production_load.add_argument("--concurrency", type=int, default=16)
     production_load.add_argument("--input-tokens", type=int, default=512)
@@ -199,6 +212,19 @@ def _parser() -> argparse.ArgumentParser:
     )
     manifest.add_argument("--experiment-dir", type=Path, required=True)
     manifest.add_argument("--output", type=Path, required=True)
+    manifest.add_argument("--resolved-config", type=Path)
+
+    resolve = commands.add_parser(
+        "resolve-config", help="Resolve moving Hugging Face names to immutable revisions."
+    )
+    resolve.add_argument("--config", type=Path, required=True)
+    resolve.add_argument("--output", type=Path, required=True)
+
+    audit = commands.add_parser(
+        "audit-artifacts", help="Validate a formal measured-artifact directory."
+    )
+    audit.add_argument("--artifact-dir", type=Path, required=True)
+    audit.add_argument("--output", type=Path, required=True)
     return parser
 
 
@@ -369,7 +395,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .evaluation import evaluate_endpoint
 
         evaluate_endpoint(
-            args.base_url, args.model, args.dataset, args.output_dir,
+            args.base_url, args.model, args.model_revision,
+            args.backend_version, args.dataset, args.output_dir,
             args.max_tokens, args.timeout_seconds,
         )
         return 0
@@ -378,6 +405,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
         run_prefix_cache_experiment(
             args.disabled_url, args.enabled_url, args.model,
+            args.model_revision, args.backend_version,
             args.prefix_lengths, args.reuse_counts, args.output_tokens,
             args.concurrency, args.repetitions, args.timeout_seconds,
             args.output_dir,
@@ -387,7 +415,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .kv_experiment import run_kv_memory_experiment
 
         run_kv_memory_experiment(
-            args.base_url, args.model, args.sequence_lengths,
+            args.base_url, args.model, args.model_revision,
+            args.backend_version, args.sequence_lengths,
             args.concurrency, args.output_tokens, args.timeout_seconds,
             args.layers, args.kv_heads, args.head_dim,
             args.bytes_per_element, args.output_dir,
@@ -397,7 +426,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .speculative_experiment import run_speculative_comparison
 
         run_speculative_comparison(
-            args.baseline_url, args.speculative_url, args.model, args.workloads,
+            args.baseline_url, args.speculative_url, args.model,
+            args.target_revision, args.baseline_backend_version,
+            args.speculative_backend_version, args.speculative_config,
+            args.workloads,
             args.input_size_hints, args.output_tokens, args.concurrency,
             args.measured_requests, args.repetitions, args.timeout_seconds,
             args.output_dir, args.baseline_metrics_url,
@@ -413,7 +445,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         from .production_experiment import run_gateway_load
 
         run_gateway_load(
-            args.base_url, args.metrics_url, args.model, args.requests,
+            args.base_url, args.metrics_url, args.model,
+            args.model_revision, args.backend_version, args.gateway_version,
+            args.requests,
             args.concurrency, args.input_tokens, args.output_tokens,
             args.timeout_seconds, args.hourly_cost_usd, args.peak_rps,
             args.target_utilization, args.output_dir,
@@ -428,8 +462,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     if args.command == "create-manifest":
         from .manifest import create_manifest
 
-        create_manifest(args.experiment_dir, args.output)
+        create_manifest(args.experiment_dir, args.output, args.resolved_config)
         return 0
+    if args.command == "resolve-config":
+        from .config_resolution import resolve_config
+
+        resolve_config(args.config, args.output)
+        return 0
+    if args.command == "audit-artifacts":
+        from .artifact_audit import audit_artifacts
+
+        result = audit_artifacts(args.artifact_dir, args.output)
+        print(json.dumps(result, indent=2))
+        return 0 if result["passed"] else 1
     raise SystemExit(f"Unknown command: {args.command}")
 
 

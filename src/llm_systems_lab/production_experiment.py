@@ -16,6 +16,9 @@ def run_gateway_load(
     base_url: str,
     metrics_url: str,
     model: str,
+    model_revision: str,
+    backend_version: str,
+    gateway_version: str,
     requests: int,
     concurrency: int,
     input_tokens: int,
@@ -38,6 +41,9 @@ def run_gateway_load(
     output_throughput = float(metrics["output_throughput_tokens_s"] or 0)
     artifact = {
         "schema_version": "1.0", "experiment": "exp008-production-load",
+        "source": "measured", "model": model,
+        "model_revision": model_revision, "backend_version": backend_version,
+        "gateway_version": gateway_version,
         "environment": capture_environment(), "workload": {
             "requests": requests, "concurrency": concurrency,
             "input_tokens": input_tokens, "output_tokens": output_tokens,

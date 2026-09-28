@@ -84,6 +84,9 @@ Experiment sequence:
 ```text
 labs/          Guided explanations, exercises, and exit criteria
 experiments/   Hypotheses, controlled methods, results, and conclusions
+artifacts/     Audited raw measurements and immutable run manifests
+data/          Versioned training and evaluation smoke-test datasets
+scripts/       Backend launchers, profiling, and training automation
 src/           Reusable benchmark, metrics, and reporting code
 tests/         Correctness checks for metrics and benchmark tooling
 ```
@@ -108,10 +111,13 @@ Before a measured run, create an immutable manifest beside its artifacts:
 ```bash
 python -m llm_systems_lab create-manifest \
   --experiment-dir experiments/exp003_batching_saturation \
+  --resolved-config artifacts/exp003/resolved-config.json \
   --output artifacts/exp003/manifest.json
 ```
 
 The manifest records SHA-256 hashes for the experiment definition, repository commit, runtime, and detected accelerator. Resolve moving model names to immutable revisions before creating it.
+
+See the complete [evidence workflow](EVIDENCE.md) for config resolution, manifests, artifact auditing, and report publication gates.
 
 ## Contributing
 

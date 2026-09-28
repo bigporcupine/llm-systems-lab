@@ -18,6 +18,10 @@ def run_speculative_comparison(
     baseline_url: str,
     speculative_url: str,
     model: str,
+    target_revision: str,
+    baseline_backend_version: str,
+    speculative_backend_version: str,
+    speculative_config: str,
     workloads: List[str],
     input_size_hints: List[int],
     output_tokens: int,
@@ -64,6 +68,9 @@ def run_speculative_comparison(
                             workload={"workload": workload, "input_size_hint": input_hint,
                                       "output_tokens": output_tokens,
                                       "measured_requests": measured_requests,
+                                      "model_revision": target_revision,
+                                      "backend_version": baseline_backend_version if variant == "target-only" else speculative_backend_version,
+                                      "speculative_config": speculative_config if variant == "speculative" else None,
                                       "repetition": repetition},
                         ), metrics, run.traces,
                     )
@@ -79,7 +86,12 @@ def run_speculative_comparison(
         raw_metric_deltas[variant] = metric_delta(before, after) if metrics_url else {}
     artifact = {
         "schema_version": "1.0", "experiment": "exp006-speculative-decoding",
-        "model": model, "environment": capture_environment(), "cells": cells,
+        "source": "derived-from-measured", "model": model,
+        "target_revision": target_revision,
+        "baseline_backend_version": baseline_backend_version,
+        "speculative_backend_version": speculative_backend_version,
+        "speculative_config": speculative_config,
+        "environment": capture_environment(), "cells": cells,
         "engine_metric_deltas": raw_metric_deltas,
     }
     (output_dir / "summary.json").write_text(json.dumps(artifact, indent=2) + "\n", encoding="utf-8")

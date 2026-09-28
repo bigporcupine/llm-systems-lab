@@ -13,6 +13,8 @@ from .workloads import deterministic_prompt
 def run_kv_memory_experiment(
     base_url: str,
     model: str,
+    model_revision: str,
+    backend_version: str,
     sequence_lengths: List[int],
     concurrencies: List[int],
     output_tokens: int,
@@ -66,7 +68,9 @@ def run_kv_memory_experiment(
             })
     artifact = {
         "schema_version": "1.0", "experiment": "exp005-kv-memory",
-        "model": model, "environment": capture_environment(),
+        "source": "measured", "model": model,
+        "model_revision": model_revision, "backend_version": backend_version,
+        "environment": capture_environment(),
         "model_dimensions": {"layers": layers, "kv_heads": kv_heads,
                              "head_dim": head_dim, "bytes_per_element": bytes_per_element},
         "cells": cells,

@@ -29,6 +29,7 @@ class RepositoryContractTests(unittest.TestCase):
             "experiment-matrix", "evaluate-endpoint", "experiment-005-kv-memory",
             "experiment-005-prefix-cache", "experiment-006-speculative",
             "production-gateway", "experiment-008-load", "analyze-canary",
+            "resolve-config", "create-manifest", "audit-artifacts",
         )
         for command in commands:
             self.assertIn(f'"{command}"', cli)

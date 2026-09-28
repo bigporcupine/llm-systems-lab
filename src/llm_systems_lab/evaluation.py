@@ -12,6 +12,8 @@ from .quality import load_jsonl, score_predictions
 def evaluate_endpoint(
     base_url: str,
     model: str,
+    model_revision: str,
+    backend_version: str,
     dataset_path: Path,
     output_dir: Path,
     max_tokens: int = 128,
@@ -32,7 +34,8 @@ def evaluate_endpoint(
         predictions[str(row["id"])] = trace.completion_text or ""
     scores = score_predictions(dataset, predictions)
     artifact = {
-        "schema_version": "1.0", "model": model,
+        "schema_version": "1.0", "source": "measured", "model": model,
+        "model_revision": model_revision, "backend_version": backend_version,
         "dataset": str(dataset_path), "environment": capture_environment(),
         "scores": scores, "predictions": predictions,
         "traces": [trace.__dict__ for trace in traces],

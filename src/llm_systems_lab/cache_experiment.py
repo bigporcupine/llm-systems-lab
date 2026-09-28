@@ -15,6 +15,8 @@ def run_prefix_cache_experiment(
     disabled_url: str,
     enabled_url: str,
     model: str,
+    model_revision: str,
+    backend_version: str,
     prefix_lengths: List[int],
     reuse_counts: List[int],
     output_tokens: int,
@@ -69,7 +71,9 @@ def run_prefix_cache_experiment(
         break_evens[str(prefix_length)] = break_even(group, "disabled_p95_ms", "enabled_p95_ms")
     artifact = {
         "schema_version": "1.0", "experiment": "exp005-prefix-cache",
-        "model": model, "environment": capture_environment(),
+        "source": "measured", "model": model,
+        "model_revision": model_revision, "backend_version": backend_version,
+        "environment": capture_environment(),
         "rows": rows, "break_even_by_prefix_length": break_evens,
         "raw_runs": raw,
     }
